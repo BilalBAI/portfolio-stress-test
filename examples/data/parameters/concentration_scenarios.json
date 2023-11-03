@@ -1,0 +1,135 @@
+{
+    "single_name_concentration_scenarios": {
+        "core": {
+            "MktCap 1": [
+                8,
+                -1
+            ],
+            "MktCap 2": [
+                4,
+                -1
+            ],
+            "MktCap 3": [
+                1.5,
+                -1
+            ],
+            "MktCap 4": [
+                1,
+                -0.8
+            ],
+            "MktCap 5": [
+                0.6,
+                -0.45
+            ],
+            "MktCap 6": [
+                0.5,
+                -0.4
+            ],
+            "MktCap 7": [
+                0.25,
+                -0.25
+            ]
+        },
+        "non_core": {
+            "MktCap 1": [
+                8,
+                -1
+            ],
+            "MktCap 2": [
+                4,
+                -1
+            ],
+            "MktCap 3": [
+                2.5,
+                -1
+            ],
+            "MktCap 4": [
+                1.5,
+                -1
+            ],
+            "MktCap 5": [
+                0.9,
+                -0.7
+            ],
+            "MktCap 6": [
+                0.75,
+                -0.6
+            ],
+            "MktCap 7": [
+                0.25,
+                -0.25
+            ]
+        }
+    },
+    "seven_name_concentration_scenarios": {
+        "core": {
+            "MktCap 1": [
+                4,
+                -0.7
+            ],
+            "MktCap 2": [
+                1.5,
+                -0.55
+            ],
+            "MktCap 3": [
+                0.6,
+                -0.45
+            ],
+            "MktCap 4": [
+                0.45,
+                -0.35
+            ],
+            "MktCap 5": [
+                0.35,
+                -0.3
+            ],
+            "MktCap 6": [
+                0.2,
+                -0.25
+            ],
+            "MktCap 7": [
+                0.15,
+                -0.15
+            ]
+        },
+        "non_core": {
+            "MktCap 1": [
+                4,
+                -1
+            ],
+            "MktCap 2": [
+                1.5,
+                -0.8
+            ],
+            "MktCap 3": [
+                1,
+                -0.7
+            ],
+            "MktCap 4": [
+                0.7,
+                -0.55
+            ],
+            "MktCap 5": [
+                0.55,
+                -0.45
+            ],
+            "MktCap 6": [
+                0.45,
+                -0.4
+            ],
+            "MktCap 7": [
+                0.15,
+                -0.15
+            ]
+        }
+    },
+    "exclude": [
+        "BHP Group PLC",
+        "BHP Group Ltd",
+        "Carnival Corp",
+        "Carnival PLC",
+        "Rio Tinto Ltd",
+        "Rio Tinto PLC",
+        "Bangkok Bank PCL"
+    ]
+}

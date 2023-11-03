@@ -1,0 +1,12 @@
+pip-tools
+pytest
+teamcity-messages
+pylint
+pytest
+pytest-cov
+coverage
+mypy
+pycodestyle
+flake8
+yapf
+flask

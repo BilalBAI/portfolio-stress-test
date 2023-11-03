@@ -1,0 +1,47 @@
+[
+    {
+        "ticker": "700 HK Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "2800 HK Equity",
+        "book": "test",
+        "quantity": -10000
+    },
+    {
+        "ticker": "1299 HK Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "5 HK Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "3690 HK Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "388 HK Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "9983 JP Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "9984 JP Equity",
+        "book": "test",
+        "quantity": 10000
+    },
+    {
+        "ticker": "8035 JP Equity",
+        "book": "test",
+        "quantity": 10000
+    }
+]

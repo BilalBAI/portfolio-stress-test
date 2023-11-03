@@ -1,0 +1,52 @@
+[
+    {
+        "Scenario Name": "-15%",
+        "Global Shock": {
+            "Group 1": -0.15,
+            "Group 2": -0.15,
+            "Group 3": -0.15,
+            "Group 4": -0.15
+        },
+        "Disp1": {
+            "Group 1": 0.025,
+            "Group 2": 0.025,
+            "Group 3": 0.075,
+            "Group 4": 0.075
+        },
+        "Disp2": {
+            "Group 1": 0.075,
+            "Group 2": 0.075,
+            "Group 3": 0.05,
+            "Group 4": 0.05
+        },
+        "Vol Shock": {
+            "Relative": 0,
+            "Absolute": 0
+        }
+    },
+    {
+        "Scenario Name": "+10%",
+        "Global Shock": {
+            "Group 1": 0.1,
+            "Group 2": 0.1,
+            "Group 3": 0.1,
+            "Group 4": 0.1
+        },
+        "Disp1": {
+            "Group 1": 0.025,
+            "Group 2": 0.025,
+            "Group 3": 0.075,
+            "Group 4": 0.075
+        },
+        "Disp2": {
+            "Group 1": 0.075,
+            "Group 2": 0.075,
+            "Group 3": 0.05,
+            "Group 4": 0.05
+        },
+        "Vol Shock": {
+            "Relative": 0,
+            "Absolute": 0
+        }
+    }
+]
