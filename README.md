@@ -1,6 +1,6 @@
 # PortRisk
 
-A python-based automatic tress testing tool to evaluate the portfolio risk under various scenarios.
+A python-based automatic stress testing tool to evaluate the portfolio risk under various scenarios.
 
 ## Installation
 
