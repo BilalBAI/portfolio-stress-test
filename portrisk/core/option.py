@@ -8,56 +8,10 @@ import pandas as pd
 import numpy as np
 
 
-class BidAsk:
-
-    def __init__(
-        self,
-        data: ty.Optional[pd.DataFrame] = None,
-        config: ty.Mapping = MappingProxyType({'Factor': 0.0}),
-        valuation_date: ty.Optional[date] = None
-    ):
-        self.net_charge = 0
-        self.gross_charge = 0
-        self.bid_ask_charge = 0
-        self.vega90d_array = np.array([])
-        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
-        self.bid_ask_factor = config['Factor']
-        self.valuation_date: date = date.today() if valuation_date is None else valuation_date
-        self.vega90d: float = 0
-
-    def __add__(self, other):
-        self.net_charge = self.net_charge + other.bid_ask_charge
-        self.gross_charge = self.gross_charge + abs(other.bid_ask_charge)
-        self.vega90d_array = np.append(self.vega90d_array, other.vega90d)
-        return self
-
-    def _calc_vega90days(self):
-        df_orig = self.data
-        s_today = pd.to_datetime(pd.Series(self.valuation_date, index=df_orig.index))
-        s_expiry = pd.to_datetime(df_orig['Expiry'])
-        s_ttx = (s_expiry - s_today).astype('timedelta64[D]')
-        s_vega_90days = (90 / s_ttx)**0.4 * df_orig['PositionVega']
-        self.vega90d = s_vega_90days.sum()
-
-    def calc(self):
-        self._calc_vega90days()
-        self.bid_ask_charge = -abs(self.vega90d * self.bid_ask_factor)
-        self.vega90d_array = np.append(self.vega90d_array, self.vega90d)
-        self.net_charge = self.bid_ask_charge
-        self.gross_charge = abs(self.bid_ask_charge)
-
-    def aggregrate(self):
-        self.aggregate()
-
-    def aggregate(self):
-        g1 = sum(abs(self.vega90d_array))
-        g2 = sum(self.vega90d_array)
-        g3 = (g1 / g2)**2 + 6.4
-        g = 2 / math.log(min(g3, 20))
-        self.final_charge = -(g * abs(self.gross_charge) + (1 - g) * abs(self.net_charge))
-
-
 class Concentration:
+    """
+    Parallel shock
+    """
 
     def __init__(
         self,
@@ -445,3 +399,52 @@ class IRVegaLiq:
             'Sum': self.hedge_charge + self.exit_charge + self.fees,
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+
+
+class BidAsk:
+
+    def __init__(
+        self,
+        data: ty.Optional[pd.DataFrame] = None,
+        config: ty.Mapping = MappingProxyType({'Factor': 0.0}),
+        valuation_date: ty.Optional[date] = None
+    ):
+        self.net_charge = 0
+        self.gross_charge = 0
+        self.bid_ask_charge = 0
+        self.vega90d_array = np.array([])
+        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
+        self.bid_ask_factor = config['Factor']
+        self.valuation_date: date = date.today() if valuation_date is None else valuation_date
+        self.vega90d: float = 0
+
+    def __add__(self, other):
+        self.net_charge = self.net_charge + other.bid_ask_charge
+        self.gross_charge = self.gross_charge + abs(other.bid_ask_charge)
+        self.vega90d_array = np.append(self.vega90d_array, other.vega90d)
+        return self
+
+    def _calc_vega90days(self):
+        df_orig = self.data
+        s_today = pd.to_datetime(pd.Series(self.valuation_date, index=df_orig.index))
+        s_expiry = pd.to_datetime(df_orig['Expiry'])
+        s_ttx = (s_expiry - s_today).astype('timedelta64[D]')
+        s_vega_90days = (90 / s_ttx)**0.4 * df_orig['PositionVega']
+        self.vega90d = s_vega_90days.sum()
+
+    def calc(self):
+        self._calc_vega90days()
+        self.bid_ask_charge = -abs(self.vega90d * self.bid_ask_factor)
+        self.vega90d_array = np.append(self.vega90d_array, self.vega90d)
+        self.net_charge = self.bid_ask_charge
+        self.gross_charge = abs(self.bid_ask_charge)
+
+    def aggregrate(self):
+        self.aggregate()
+
+    def aggregate(self):
+        g1 = sum(abs(self.vega90d_array))
+        g2 = sum(self.vega90d_array)
+        g3 = (g1 / g2)**2 + 6.4
+        g = 2 / math.log(min(g3, 20))
+        self.final_charge = -(g * abs(self.gross_charge) + (1 - g) * abs(self.net_charge))
