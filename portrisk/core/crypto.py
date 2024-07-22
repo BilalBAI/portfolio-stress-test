@@ -18,13 +18,13 @@ class CryptoRisk:
 
     def __init__(self, product_level_data, parameters: CryptoParameters):
         self.parameters = parameters
-        self.total_loss = 0
-        self.macro_loss = 0
-        self.sector_loss = 0
-        self.concentration_loss = 0
-        self.rv_loss = 0
-        self.delta_liq_loss = 0
-        self.option_liq_loss = 0
+        # self.total_loss = 0
+        # self.macro_loss = 0
+        # self.sector_loss = 0
+        # self.concentration_loss = 0
+        # self.rv_loss = 0
+        # self.delta_liq_loss = 0
+        # self.option_liq_loss = 0
         self.symbol_level_data_ungrouped = DataFrame()
         self.product_level_data, self.st_columns = self.apply_stress_test(
             product_level_data
@@ -79,51 +79,51 @@ class CryptoRisk:
         else:
             return 0
 
-    def delta_liquidation(self, df_input='default'):
-        """
-        Required fields: ['quantity', 'instrumentType', 'SECURITY_TYP2', 'VOLUME_AVG_20D', 'Market Value'],
-        Return: Liq_charge: DataFrame
-        df = df[(df['instrumentType'] == 'EquitySecurity') & (df['SECURITY_TYP2'] != 'Mutual Fund') &
-        (df['VOLUME_AVG_20D'] != 0)]
-        """
-        if df_input == 'default':
-            df = self.symbol_level_data_ungrouped.copy()
-        else:
-            df = df_input.copy()
-        df = df[df['VOLUME_AVG_20D'] != 0]
-        df['days_to_liq'] = df['delta'].abs() / (df['VOLUME_AVG_20D'] * df['price'])
-        df['Liq Charge'] = df[['days_to_liq', 'delta']].apply(EquityRisk.calc_delta_liq, axis=1)
-        return df.sort_values(by='Liq Charge', ascending=False)
+    # def delta_liquidation(self, df_input='default'):
+    #     """
+    #     Required fields: ['quantity', 'instrumentType', 'SECURITY_TYP2', 'VOLUME_AVG_20D', 'Market Value'],
+    #     Return: Liq_charge: DataFrame
+    #     df = df[(df['instrumentType'] == 'EquitySecurity') & (df['SECURITY_TYP2'] != 'Mutual Fund') &
+    #     (df['VOLUME_AVG_20D'] != 0)]
+    #     """
+    #     if df_input == 'default':
+    #         df = self.symbol_level_data_ungrouped.copy()
+    #     else:
+    #         df = df_input.copy()
+    #     df = df[df['VOLUME_AVG_20D'] != 0]
+    #     df['days_to_liq'] = df['delta'].abs() / (df['VOLUME_AVG_20D'] * df['price'])
+    #     df['Liq Charge'] = df[['days_to_liq', 'delta']].apply(EquityRisk.calc_delta_liq, axis=1)
+    #     return df.sort_values(by='Liq Charge', ascending=False)
 
-    def run(self):
-        """
-        Attributes Created: rv_summary, .macro_summary, .sector_summary, .concentration_summary, .equity_liq_summary,
-                            .equity_risk_summary
-        """
-        if self.product_level_data.empty or self.symbol_level_data.empty:
-            self.total_loss = 0
-            return 'Warning: Empty DataFrame input'
-        df_rv = self.rv_risk()
-        self.rv_loss = df_rv['Spot RV'].sum()
+    # def run(self):
+    #     """
+    #     Attributes Created: rv_summary, .macro_summary, .sector_summary, .concentration_summary, .equity_liq_summary,
+    #                         .equity_risk_summary
+    #     """
+    #     if self.product_level_data.empty or self.symbol_level_data.empty:
+    #         self.total_loss = 0
+    #         return 'Warning: Empty DataFrame input'
+    #     df_rv = self.rv_risk()
+    #     self.rv_loss = df_rv['Spot RV'].sum()
 
-        df_liq = self.delta_liquidation()
-        self.delta_liq_loss = df_liq['Liq Charge'].sum()
+    #     df_liq = self.delta_liquidation()
+    #     self.delta_liq_loss = df_liq['Liq Charge'].sum()
 
-        self.total_loss = min(
-            self.rv_loss, self.macro_loss, self.sector_loss, self.concentration_loss
-        ) + self.delta_liq_loss
-        self.summary_info()
-        return 'Success'
+    #     self.total_loss = min(
+    #         self.rv_loss, self.macro_loss, self.sector_loss, self.concentration_loss
+    #     ) + self.delta_liq_loss
+    #     self.summary_info()
+    #     return 'Success'
 
-    def summary_info(self):
-        print('\n---------------------------------')
-        print(f"GMV: {self.gmv:,.0f}")
-        print(f'Equity Risk Summary: {self.total_loss:,.0f}\n')
-        print('Equity Stress Tests:')
-        print(f'RV Summary: {self.rv_loss:,.0f}')
-        print(f'Macro Summary: {self.macro_loss:,.0f}')
-        print(f'Sector Summary: {self.sector_loss:,.0f}')
-        print(f'Concentration Summary: {self.concentration_loss:,.0f}\n')
-        print('Liquidity Summary:')
-        print(f'Delta Liq Summary: {self.delta_liq_loss:,.0f}')
-        print('---------------------------------\n')
+    # def summary_info(self):
+    #     print('\n---------------------------------')
+    #     print(f"GMV: {self.gmv:,.0f}")
+    #     print(f'Equity Risk Summary: {self.total_loss:,.0f}\n')
+    #     print('Equity Stress Tests:')
+    #     print(f'RV Summary: {self.rv_loss:,.0f}')
+    #     print(f'Macro Summary: {self.macro_loss:,.0f}')
+    #     print(f'Sector Summary: {self.sector_loss:,.0f}')
+    #     print(f'Concentration Summary: {self.concentration_loss:,.0f}\n')
+    #     print('Liquidity Summary:')
+    #     print(f'Delta Liq Summary: {self.delta_liq_loss:,.0f}')
+    #     print('---------------------------------\n')
