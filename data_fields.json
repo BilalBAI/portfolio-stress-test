@@ -2,6 +2,7 @@
     "spot_vol_shock": {
         "spot_shock": "spot = spot * (1 + spot_shock)",
         "vol_shock": "vol = vol * (1 + vol_shock)",
+        "market_price": "market price",
         "quantity": "number of contracts",
         "multiplier": "contract multiplier",
         "strike": "strike price of option",
