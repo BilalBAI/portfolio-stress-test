@@ -1,0 +1,18 @@
+[
+    {
+        "spot_shock": 0.1,
+        "vol_shock": 0,
+        "underlying": "BTC",
+        "strike": "all",
+        "put_call": "all",
+        "days_to_expiry": "all"
+    },
+    {
+        "spot_shock": 0.1,
+        "vol_shock": 0.2,
+        "underlying": "BTC",
+        "strike": 60000,
+        "put_call": "put",
+        "days_to_expiry": 30
+    }
+]
