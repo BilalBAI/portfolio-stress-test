@@ -1,6 +1,11 @@
 from __future__ import annotations
 from datetime import date, timedelta
 
+class CryptoParameters:
+
+    def __init__(self, crypto_shocks: list):
+        self.crypto_shocks = crypto_shocks
+
 
 class EquityParameters:
 

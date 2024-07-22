@@ -1,0 +1,182 @@
+[
+    {
+        "spot_shock": 8,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 4,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 2.5,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 1.5,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 1,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.9,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.75,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.7,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.6,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.55,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.5,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.45,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.35,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.3,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.25,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.225,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.2,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.175,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.15,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.125,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.1,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.075,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.05,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.025,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": 0.0,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.025,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.05,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.075,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.1,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.125,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.15,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.175,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.2,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.225,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.25,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.275,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.3,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.35,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.4,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.45,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.55,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.6,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.7,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -0.8,
+        "vol_shock": 0
+    },
+    {
+        "spot_shock": -1,
+        "vol_shock": 0
+    }
+]

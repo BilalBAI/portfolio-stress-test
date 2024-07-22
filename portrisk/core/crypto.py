@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame
 
-from ..utils import EquityParameters
+from ..utils import CryptoParameters
 from ..black_scholes import calc_delta, DELTA_PARAMETERS
 from .stress_test import StressTest
 
@@ -16,7 +16,7 @@ class CryptoRisk:
     config: build Config object using the relevant class in utils.
     """
 
-    def __init__(self, product_level_data, parameters: EquityParameters):
+    def __init__(self, product_level_data, parameters: CryptoParameters):
         self.parameters = parameters
         self.total_loss = 0
         self.macro_loss = 0
@@ -39,7 +39,7 @@ class CryptoRisk:
         product_level_data = product_level_data.copy()
         st = StressTest()
         st_columns = ['delta']
-        for i in self.parameters.equity_shocks:
+        for i in self.parameters.crypto_shocks:
             product_level_data['spot_shock'] = i['spot_shock']
             product_level_data['vol_shock'] = i['vol_shock']
             product_level_data = st.shock_df(product_level_data, f"spot {i['spot_shock']} vol {i['vol_shock']}")
@@ -105,18 +105,6 @@ class CryptoRisk:
             return 'Warning: Empty DataFrame input'
         df_rv = self.rv_risk()
         self.rv_loss = df_rv['Spot RV'].sum()
-
-        [df_macro_summary, *_] = self.macro_risk()
-        self.macro_loss = df_macro_summary['Total Loss'].min()
-
-        [df_sector_summary, *_] = self.sector_risk()
-        self.sector_loss = df_sector_summary['Total Loss'].min()
-
-        [single_name_max_loss, seven_name_max_loss, *_] = self.concentration_risk()
-        self.concentration_loss = min(
-            single_name_max_loss.loc['Single Name Up'], single_name_max_loss.loc['Single Name Down'],
-            seven_name_max_loss['Seven Name Up'].sum(), seven_name_max_loss['Seven Name Down'].sum()
-        )
 
         df_liq = self.delta_liquidation()
         self.delta_liq_loss = df_liq['Liq Charge'].sum()
