@@ -1,0 +1,21 @@
+{
+    "spot_vol_shock": [
+        "spot_shock",
+        "vol_shock",
+        "quantity",
+        "multiplier",
+        "strike",
+        "time_to_expiry",
+        "spot",
+        "rate",
+        "vol",
+        "put_call",
+        "cost_of_carry_rate"
+    ],
+    "vol_surface_shock": [
+        "Expiry",
+        "PositionVega",
+        "atm_ivol_3m",
+        "days_to_trade"
+    ]
+}
