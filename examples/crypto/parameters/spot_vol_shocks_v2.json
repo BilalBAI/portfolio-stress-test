@@ -1,0 +1,12 @@
+[
+    {
+        "spot_shock": 0.1,
+        "vol_shock": 0,
+        "underlying": "BTC"
+    },
+    {
+        "spot_shock": 0,
+        "vol_shock": 0.2,
+        "underlying": "BTC"
+    }
+]
