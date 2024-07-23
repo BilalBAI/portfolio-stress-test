@@ -1,7 +1,7 @@
 from datetime import date
 import pandas as pd
 import pytest
-from portrisk.core.option import BidAsk
+from portrisk.core.vol_surface_shocks import BidAsk
 
 
 def test_bidask_adding():

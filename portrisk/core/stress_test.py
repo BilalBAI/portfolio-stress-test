@@ -10,7 +10,7 @@ GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 
 class StressTest:
     '''
-        Basic Stress Test for Equity and option
+        Basic Spot and Vol Stress Test
     '''
 
     def shock_df(self, data: DataFrame, name):

@@ -10,7 +10,7 @@ import numpy as np
 
 class Concentration:
     """
-    Parallel shock
+    Parallel/Concentration shock
     """
 
     def __init__(
