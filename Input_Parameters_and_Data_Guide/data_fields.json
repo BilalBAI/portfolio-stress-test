@@ -15,6 +15,6 @@
         "Expiry": "Expiry date",
         "PositionVega": "Position Vega in dollars",
         "atm_ivol_3m": "3 month at the money implied vol",
-        "days_to_trade": "set to 5 if liqudation is not considered"
+        "days_to_trade": "set to 5 if liquidation is not considered"
     }
 }
