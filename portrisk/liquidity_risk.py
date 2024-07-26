@@ -94,14 +94,14 @@ def corwin_schultz_spread(high, low):
     return cs_hl
 
 
-def calculate_transaction_based_metrics(data):
-    data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
+# def calculate_transaction_based_metrics(data):
+#     data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
 
-    high = data['High']
-    low = data['Low']
-    data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
+#     high = data['High']
+#     low = data['Low']
+#     data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
 
-    return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
+#     return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
 
 
 # def calculate_price_based_metrics(data):
