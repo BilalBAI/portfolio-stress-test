@@ -57,14 +57,51 @@ def calculate_volume_based_metrics(data, T):
     return data[['Liquidity_Ratio', 'Hui_Heubel_Ratio', 'Turnover_Ratio']]
 
 
-# def calculate_transaction_based_metrics(data):
-#     data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
+def corwin_schultz_spread(high, low):
+    """
+    TODO: fix zero outcomes, double check formula implementation
 
-#     high = data['High']
-#     low = data['Low']
-#     data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
+    Calculate the Corwin-Schultz bid-ask spread estimator.
 
-#     return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
+    :param high: Series or array of high prices
+    :param low: Series or array of low prices
+    :return: Series of spread estimates
+    """
+    # Ensure inputs are pandas Series
+    if not isinstance(high, pd.Series):
+        high = pd.Series(high)
+    if not isinstance(low, pd.Series):
+        low = pd.Series(low)
+
+    T = len(high) - 1
+
+    # Calculate beta
+    beta = np.mean([(np.log(high[i] / low[i]))**2 for i in range(T)])
+
+    # Calculate gamma
+    gamma = [(max(high[i], high[i + 1]) - min(low[i], low[i + 1]))**2 for i in range(T)]
+
+    # Calculate alpha
+    alpha = [(np.sqrt(2 * beta) - np.sqrt(beta)) / (3 - 2 * np.sqrt(2)) -
+             (np.sqrt(g)) / (3 - 2 * np.sqrt(2)) for g in gamma]
+
+    # Estimate spread
+    s = [max(2 * (np.exp(a) - 1) / (1 + np.exp(a)), 0) for a in alpha]
+
+    # Average the spread estimates
+    cs_hl = np.mean(s)
+
+    return cs_hl
+
+
+def calculate_transaction_based_metrics(data):
+    data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
+
+    high = data['High']
+    low = data['Low']
+    data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
+
+    return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
 
 
 # def calculate_price_based_metrics(data):
