@@ -7,18 +7,20 @@ from scipy.stats import kendalltau
 from scipy.linalg import cholesky
 
 
-def calculate_volume_based_metrics(data):
+def calculate_volume_based_metrics(data, T):
     # Liquidity Ratio
-    data['Liquidity_Ratio'] = data['Volume'] / (data['Price'].diff() ** 2)
+    # data['Liquidity_Ratio'] = (data['Price'] * data['Volume']).rolling(window=T).sum() / (data['Price'].diff() ** 2)
 
     # Hui-Heubel Ratio
-    Pmax = data['Price'].rolling(window=20).max()
-    Pmin = data['Price'].rolling(window=20).min()
-    Pbar = data['Price'].rolling(window=20).mean()
-    data['Hui_Heubel_Ratio'] = (Pmax - Pmin) / (Pbar * data['Volume'])
+    Pmax = data['Price'].rolling(window=T).max()
+    Pmin = data['Price'].rolling(window=T).min()
+    Pbar = data['Price'].rolling(window=T).mean()
+    volume = data['Volume'].rolling(window=T).sum()
+    data['Hui_Heubel_Ratio'] = ((Pmax - Pmin) / Pmin) / (volume / (Pbar * data['Outstanding_Shares']))
 
-    # Turnover Ratio
-    data['Turnover_Ratio'] = data['Volume'] / data['Outstanding_Shares']
+    # Turnover Ratio: Share Turnover = Trading Volume / Average Shares Outstanding
+    data['Turnover_Ratio'] = data['Volume'].rolling(window=T).sum(
+    ) / (data['Outstanding_Shares'].rolling(window=T).sum() / T)
 
     return data[['Liquidity_Ratio', 'Hui_Heubel_Ratio', 'Turnover_Ratio']]
 
