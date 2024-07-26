@@ -1,4 +1,20 @@
 {
+  "products": [
+    {
+      "product": "BTC",
+      "underlying": [
+        "BTC"
+      ],
+      "class_": "BTC"
+    },
+    {
+      "product": "ETH",
+      "underlying": [
+        "ETH"
+      ],
+      "class_": "ETH"
+    }
+  ],
   "Concentration-Shocks": [
     {
       "Class": "BTC",

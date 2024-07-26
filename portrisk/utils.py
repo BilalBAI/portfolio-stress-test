@@ -1,10 +1,41 @@
 from __future__ import annotations
 from datetime import date, timedelta
 
+
 class CryptoParameters:
 
     def __init__(self, crypto_shocks: list):
         self.crypto_shocks = crypto_shocks
+
+
+class VolSurfaceParameters:
+    '''
+        Manage config files for options models
+    '''
+
+    def __init__(self, parameters: dict):
+        self.parameters = parameters
+
+    def _search(self, scenario, class_) -> dict:
+        return [item for item in self.parameters[f'{scenario}'] if item["Class"] == class_][0]
+
+    def config_bid_ask(self, class_):
+        return self._search('BidAsk', class_)
+
+    def config_concentration(self, class_):
+        c1 = self._search('Concentration-Shocks', class_)
+        c2 = self._search('Vega-Threshold', class_)
+        return {**c1, **c2}
+
+    def config_term_structure(self, class_):
+        c1 = self._search('Term-Structure-Shocks', class_)
+        c2 = self._search('Vega-Threshold', class_)
+        return {**c1, **c2}
+
+    def config_skew(self, class_):
+        c1 = self._search('Skew-Shocks', class_)
+        c2 = self._search('Vega-Threshold', class_)
+        return {**c1, **c2}
 
 
 class EquityParameters:

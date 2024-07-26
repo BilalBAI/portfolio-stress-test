@@ -1,84 +1,72 @@
 from __future__ import annotations
+import typing as ty
+
+from datetime import datetime, date
 
 import pandas as pd
 import numpy as np
 from pandas import DataFrame
 
-from ..utils import CryptoParameters
+from ..utils import CryptoParameters, OptParameters
 from ..black_scholes import calc_delta, DELTA_PARAMETERS
 from .stress_test import StressTest
+from .vol_surface_shocks import Concentration, TermStructure, Skew, BidAsk
 
 
-class CryptoRisk:
+class CryptoSpotVolShocks:
     """
-    product_level_data: DataFrame (Without Index decomposition)
+    data: DataFrame (Without Index decomposition)
     symbol_level_data: DataFrame (With Index decomposition) // not applicable for cryptos
     config: build Config object using the relevant class in utils.
     """
 
-    def __init__(self, product_level_data, parameters: CryptoParameters):
+    def __init__(self, parameters: CryptoParameters):
         self.parameters = parameters
-        # self.total_loss = 0
-        # self.macro_loss = 0
-        # self.sector_loss = 0
-        # self.concentration_loss = 0
-        # self.rv_loss = 0
-        # self.delta_liq_loss = 0
-        # self.option_liq_loss = 0
-        self.symbol_level_data_ungrouped = DataFrame()
-        self.product_level_data, self.st_columns = self.apply_stress_test(
-            product_level_data
-        )
-        self.gmv = (
-            self.product_level_data['market_price'] * self.product_level_data['quantity'] *
-            self.product_level_data['FX'] * self.product_level_data['multiplier']
-        ).abs().sum()
 
-    def apply_spot_vol_shocks(self, product_level_data):
+    def apply_spot_vol_shocks(self, data):
         # Apply Stress Tests to product level data
-        product_level_data = product_level_data.copy()
+        data = data.copy()
         st = StressTest()
         st_columns = ['delta']
         shocks = self.parameters.crypto_shocks
         for k in shocks.keys():
-            product_level_data['spot_shock'] = product_level_data['underlying'].map(shocks[k]['spot_shock'])
-            product_level_data['vol_shock'] = product_level_data['underlying'].map(shocks[k]['vol_shock'])
-            product_level_data = st.shock_df(product_level_data, f"{k}")
+            data['spot_shock'] = data['underlying'].map(shocks[k]['spot_shock'])
+            data['vol_shock'] = data['underlying'].map(shocks[k]['vol_shock'])
+            data = st.shock_df(data, f"{k}")
             st_columns.append(f"{k}")
         # Calc $delta = delta * quantity * multiplier * spot
-        product_level_data['delta'] = np.vectorize(
+        data['delta'] = np.vectorize(
             lambda spot, **DELTA_PARAMETERS: calc_delta(spot=spot, **DELTA_PARAMETERS) if spot > 0 else 0
-        )(**{col: product_level_data[col] for col in DELTA_PARAMETERS})
-        product_level_data['delta'] = product_level_data['delta'] * product_level_data['quantity'] * product_level_data[
-            'multiplier'] * product_level_data['spot']
+        )(**{col: data[col] for col in DELTA_PARAMETERS})
+        data['delta'] = data['delta'] * data['quantity'] * data[
+            'multiplier'] * data['spot']
 
-        return product_level_data, st_columns
+        return data, st_columns
 
-    def rv_risk(self, df_input='default'):
-        """
-        Return: RV details: DataFrame (sum up 'Spot RV' column to get the final number)
-        """
-        if df_input == 'default':
-            df = self.product_level_data.copy()
-        else:
-            df = df_input.copy()
-        for i in self.parameters.rv_scenarios.keys():
-            df[i] = df[f"spot {self.parameters.rv_scenarios[i]} vol 0"]
-        df['Spot RV'] = df[list(self.parameters.rv_scenarios.keys())].min(axis=1, numeric_only=True)
-        # TODO # ADR/ORD offset
-        return df
+    # def rv_risk(self, df_input='default'):
+    #     """
+    #     Return: RV details: DataFrame (sum up 'Spot RV' column to get the final number)
+    #     """
+    #     if df_input == 'default':
+    #         df = self.data.copy()
+    #     else:
+    #         df = df_input.copy()
+    #     for i in self.parameters.rv_scenarios.keys():
+    #         df[i] = df[f"spot {self.parameters.rv_scenarios[i]} vol 0"]
+    #     df['Spot RV'] = df[list(self.parameters.rv_scenarios.keys())].min(axis=1, numeric_only=True)
+    #     return df
 
-    @staticmethod
-    def calc_delta_liq(row):
-        days_to_liq = row['days_to_liq']
-        delta = row['delta']
-        if days_to_liq > 1:
-            if delta > 0:
-                return -min(1, 0.05 * (days_to_liq - 1)) * abs(delta)
-            else:
-                return -min(3, 0.05 * (days_to_liq - 1)) * abs(delta)
-        else:
-            return 0
+    # @staticmethod
+    # def calc_delta_liq(row):
+    #     days_to_liq = row['days_to_liq']
+    #     delta = row['delta']
+    #     if days_to_liq > 1:
+    #         if delta > 0:
+    #             return -min(1, 0.05 * (days_to_liq - 1)) * abs(delta)
+    #         else:
+    #             return -min(3, 0.05 * (days_to_liq - 1)) * abs(delta)
+    #     else:
+    #         return 0
 
     # def delta_liquidation(self, df_input='default'):
     #     """
@@ -101,7 +89,7 @@ class CryptoRisk:
     #     Attributes Created: rv_summary, .macro_summary, .sector_summary, .concentration_summary, .equity_liq_summary,
     #                         .equity_risk_summary
     #     """
-    #     if self.product_level_data.empty or self.symbol_level_data.empty:
+    #     if self.data.empty or self.symbol_level_data.empty:
     #         self.total_loss = 0
     #         return 'Warning: Empty DataFrame input'
     #     df_rv = self.rv_risk()
@@ -128,3 +116,148 @@ class CryptoRisk:
     #     print('Liquidity Summary:')
     #     print(f'Delta Liq Summary: {self.delta_liq_loss:,.0f}')
     #     print('---------------------------------\n')
+
+
+class CryptoVolSurfaceShocks:
+    """
+        Run Crypto Vol Surface Shocks
+    """
+
+    def __init__(self, products: list, parameters: OptParameters):
+        self.products = products
+        self.parameters = parameters
+
+    def run(self, data, group, scenario, days_to_trade: int = -1, valuation_date: ty.Optional[date] = None):
+        results = []
+        liq_b = BidAsk()
+        liq_c = Concentration()
+        liq_t = TermStructure()
+        liq_s = Skew()
+        for p in self.products:
+            re, b, c, t, s = self.calc(data=data, days_to_trade=days_to_trade, valuation_date=valuation_date, **p)
+            if re != {}:
+                if scenario == 'Liquidity':
+                    liq_b += b
+                liq_c += c
+                liq_t += t
+                liq_s += s
+                results.extend(re)
+        if results != []:
+            liq_c.aggregate()
+            liq_t.aggregate()
+            liq_s.aggregate()
+            # Results
+            results.extend(
+                [
+                    {
+                        'product': 'Sum',
+                        'measure': 'Concentration',
+                        'value': liq_c.final_charge
+                    }, {
+                        'product': 'Sum',
+                        'measure': 'TermStructure',
+                        'value': liq_t.final_charge
+                    }, {
+                        'product': 'Sum',
+                        'measure': 'Skew',
+                        'value': liq_s.final_charge
+                    }
+                ]
+            )
+            if scenario == 'Liquidity':
+                liq_b.aggregate()
+                results.extend(
+                    [
+                        {
+                            'product': 'Sum',
+                            'measure': 'BidAsk',
+                            'value': liq_b.final_charge
+                        }, {
+                            'product': 'Sum',
+                            'measure': 'Sum',
+                            'value': liq_b.final_charge + liq_c.final_charge + liq_t.final_charge + liq_s.final_charge
+                        }
+                    ]
+                )
+            else:
+                results.extend(
+                    [
+                        {
+                            'product': 'Sum',
+                            'measure': 'Sum',
+                            'value': liq_c.final_charge + liq_t.final_charge + liq_s.final_charge
+                        }
+                    ]
+                )
+            for i in results:
+                i['group'] = group
+                i['scenario'] = scenario
+                i['type'] = 'ix'
+        return results
+
+    def calc(
+        self, data, days_to_trade, product, class_, underlying, valuation_date: ty.Optional[date] = None
+    ):
+        df = data[data['Underlying'].isin(underlying)].copy()
+        if df.empty:
+            return {}, BidAsk(), Concentration(), TermStructure(), Skew()
+        df['PositionVega'] = df['PositionVega']  # * self.clients.get_fx(fx)
+        exp_3m_date = date.today() if valuation_date is None else valuation_date
+        exp_3m = min(
+            df['Expiry'].to_list(),
+            key=lambda x: abs((datetime.strptime(x, '%Y-%m-%d').date() - exp_3m_date).days - 90)
+        )
+        atm_ivol_3m = df.loc[df['Expiry'] == exp_3m, 'atm_ivol'].values[0]
+        # Run models
+        b = BidAsk(df, self.parameters.config_bid_ask(class_), valuation_date)
+        c = Concentration(
+            df, atm_ivol_3m, self.parameters.config_concentration(class_), days_to_trade, valuation_date
+        )
+        t = TermStructure(df, self.parameters.config_term_structure(class_), days_to_trade, valuation_date)
+        s = Skew(df, self.parameters.config_skew(class_), days_to_trade, valuation_date)
+        # Run models
+        c.calc()
+        t.calc()
+        s.calc()
+        # Results
+        re = [
+            {
+                'product': product,
+                'measure': 'Concentration',
+                'value': c.concentration_charge
+            }, {
+                'product': product,
+                'measure': 'TermStructure',
+                'value': t.term_charge
+            }, {
+                'product': product,
+                'measure': 'Skew',
+                'value': s.skew_charge
+            }
+        ]
+        if days_to_trade == -1:
+            b.calc()
+            re.extend(
+                [
+                    {
+                        'product': product,
+                        'measure': 'BidAsk',
+                        'value': b.bid_ask_charge
+                    }, {
+                        'product': product,
+                        'measure': 'Sum',
+                        'value': b.bid_ask_charge + c.concentration_charge + t.term_charge + s.skew_charge
+                    }
+                ]
+            )
+        else:
+            re.extend(
+                [
+                    {
+                        'product': product,
+                        'measure': 'Sum',
+                        'value': c.concentration_charge + t.term_charge + s.skew_charge
+                    }
+                ]
+            )
+        return re, b, c, t, s
