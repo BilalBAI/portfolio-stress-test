@@ -7,60 +7,6 @@ from scipy.stats import kendalltau
 from scipy.linalg import cholesky
 
 
-def calculate_volume_based_metrics(data, T):
-    # Liquidity Ratio
-    # data['Liquidity_Ratio'] = (data['Price'] * data['Volume']).rolling(window=T).sum() / (data['Price'].diff() ** 2)
-
-    # Hui-Heubel Ratio
-    Pmax = data['Price'].rolling(window=T).max()
-    Pmin = data['Price'].rolling(window=T).min()
-    Pbar = data['Price'].rolling(window=T).mean()
-    volume = data['Volume'].rolling(window=T).sum()
-    data['Hui_Heubel_Ratio'] = ((Pmax - Pmin) / Pmin) / (volume / (Pbar * data['Outstanding_Shares']))
-
-    # Turnover Ratio: Share Turnover = Trading Volume / Average Shares Outstanding
-    data['Turnover_Ratio'] = data['Volume'].rolling(window=T).sum(
-    ) / (data['Outstanding_Shares'].rolling(window=T).sum() / T)
-
-    return data[['Liquidity_Ratio', 'Hui_Heubel_Ratio', 'Turnover_Ratio']]
-
-
-def calculate_transaction_based_metrics(data):
-    data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
-
-    high = data['High']
-    low = data['Low']
-    data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
-
-    return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
-
-
-def calculate_price_based_metrics(data):
-    data['Return'] = data['Price'].pct_change()
-    data['Amihud_Illiquidity'] = (np.abs(data['Return']) / data['Volume']).rolling(window=20).mean()
-
-    return data[['Amihud_Illiquidity']]
-
-
-def calculate_market_based_metrics(data, market_returns):
-    data['Market_Return'] = market_returns
-
-    model = sm.OLS(data['Return'].dropna(), sm.add_constant(data['Market_Return'].dropna()))
-    results = model.fit()
-
-    data['CAPM_Residual'] = data['Return'] - \
-        (results.params['const'] + results.params['Market_Return'] * data['Market_Return'])
-
-    # Autoregression on trading volume change
-    data['Volume_Change'] = data['Volume'].pct_change()
-    ar_model = sm.OLS(data['CAPM_Residual'].dropna(), sm.add_constant(data['Volume_Change'].dropna()))
-    ar_results = ar_model.fit()
-
-    data['Liquidity_Level'] = ar_results.params['Volume_Change']
-
-    return data[['Liquidity_Level']]
-
-
 def gaussian_copula(data):
     # Ensure input is a DataFrame for correlation calculation
     if isinstance(data, np.ndarray):
@@ -91,6 +37,60 @@ def gaussian_copula(data):
     simulated_data = pd.DataFrame(copula_uniform, columns=data.columns)
 
     return simulated_data
+
+
+def calculate_volume_based_metrics(data, T):
+    # Liquidity Ratio
+    # data['Liquidity_Ratio'] = (data['Price'] * data['Volume']).rolling(window=T).sum() / (data['Price'].diff() ** 2)
+
+    # Hui-Heubel Ratio
+    Pmax = data['Price'].rolling(window=T).max()
+    Pmin = data['Price'].rolling(window=T).min()
+    Pbar = data['Price'].rolling(window=T).mean()
+    volume = data['Volume'].rolling(window=T).sum()
+    data['Hui_Heubel_Ratio'] = ((Pmax - Pmin) / Pmin) / (volume / (Pbar * data['Outstanding_Shares']))
+
+    # Turnover Ratio: Share Turnover = Trading Volume / Average Shares Outstanding
+    data['Turnover_Ratio'] = data['Volume'].rolling(window=T).sum(
+    ) / (data['Outstanding_Shares'].rolling(window=T).sum() / T)
+
+    return data[['Liquidity_Ratio', 'Hui_Heubel_Ratio', 'Turnover_Ratio']]
+
+
+# def calculate_transaction_based_metrics(data):
+#     data['Bid_Ask_Spread'] = data['Ask_Price'] - data['Bid_Price']
+
+#     high = data['High']
+#     low = data['Low']
+#     data['Corwin_Schultz_Spread'] = 2 * (np.log(high / low)).rolling(window=2).sum() ** 0.5 - 1
+
+#     return data[['Bid_Ask_Spread', 'Corwin_Schultz_Spread']]
+
+
+# def calculate_price_based_metrics(data):
+#     data['Return'] = data['Price'].pct_change()
+#     data['Amihud_Illiquidity'] = (np.abs(data['Return']) / data['Volume']).rolling(window=20).mean()
+
+#     return data[['Amihud_Illiquidity']]
+
+
+def calculate_market_based_metrics(data, market_returns):
+    data['Market_Return'] = market_returns
+
+    model = sm.OLS(data['Return'].dropna(), sm.add_constant(data['Market_Return'].dropna()))
+    results = model.fit()
+
+    data['CAPM_Residual'] = data['Return'] - \
+        (results.params['const'] + results.params['Market_Return'] * data['Market_Return'])
+
+    # Autoregression on trading volume change
+    data['Volume_Change'] = data['Volume'].pct_change()
+    ar_model = sm.OLS(data['CAPM_Residual'].dropna(), sm.add_constant(data['Volume_Change'].dropna()))
+    ar_results = ar_model.fit()
+
+    data['Liquidity_Level'] = ar_results.params['Volume_Change']
+
+    return data[['Liquidity_Level']]
 
 
 def dummy_data():
