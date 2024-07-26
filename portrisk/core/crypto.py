@@ -39,11 +39,12 @@ class CryptoRisk:
         product_level_data = product_level_data.copy()
         st = StressTest()
         st_columns = ['delta']
-        for i in self.parameters.crypto_shocks:
-            product_level_data['spot_shock'] = i['spot_shock']
-            product_level_data['vol_shock'] = i['vol_shock']
-            product_level_data = st.shock_df(product_level_data, f"spot {i['spot_shock']} vol {i['vol_shock']}")
-            st_columns.append(f"spot {i['spot_shock']} vol {i['vol_shock']}")
+        shocks = self.parameters.crypto_shocks
+        for k in shocks.keys():
+            product_level_data['spot_shock'] = product_level_data['underlying'].map(shocks[k]['spot_shock'])
+            product_level_data['vol_shock'] = product_level_data['underlying'].map(shocks[k]['vol_shock'])
+            product_level_data = st.shock_df(product_level_data, f"{k}")
+            st_columns.append(f"{k}")
         # Calc $delta = delta * quantity * multiplier * spot
         product_level_data['delta'] = np.vectorize(
             lambda spot, **DELTA_PARAMETERS: calc_delta(spot=spot, **DELTA_PARAMETERS) if spot > 0 else 0

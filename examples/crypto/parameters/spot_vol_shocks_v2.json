@@ -1,12 +1,22 @@
-[
-    {
-        "spot_shock": 0.1,
-        "vol_shock": 0,
-        "underlying": "BTC"
+{
+    "scenario_1": {
+        "spot_shock": {
+            "BTC": 0.1,
+            "ETH": 0.2
+        },
+        "vol_shock": {
+            "BTC": 0,
+            "ETH": 0
+        }
     },
-    {
-        "spot_shock": 0,
-        "vol_shock": 0.2,
-        "underlying": "BTC"
+    "scenario_2": {
+        "spot_shock": {
+            "BTC": 0.15,
+            "ETH": 0.25
+        },
+        "vol_shock": {
+            "BTC": 0,
+            "ETH": 0
+        }
     }
-]
+}

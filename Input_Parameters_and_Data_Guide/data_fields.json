@@ -1,5 +1,6 @@
 {
     "spot_vol_shocks": {
+        "underlying": "underlying, e.g. BTC, ETH",
         "market_price": "market price",
         "quantity": "number of contracts",
         "multiplier": "contract multiplier",
