@@ -1,6 +1,6 @@
 pandas
 numpy
 scipy
-sqlalchemy
-blpapi
-blp
+# sqlalchemy
+# blpapi
+# blp

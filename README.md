@@ -9,7 +9,7 @@ PortRisk is a Python-based stress testing tool designed to evaluate portfolio ri
 Run the following to create the portrisk conda environment:
 
 ```bash
-conda create -n portrisk python=3.8 pip wheel
+conda create -n portrisk python=3.12 pip wheel
 conda activate portrisk
 python -m pip install -e .
 ```
