@@ -63,7 +63,7 @@ portfolio-stress-test/
 #### Black Scholes (`black_sholes.py`)
 A implementation of Generalized Black-Scholes-Merton Option Pricing model. Along with delta, vega and gamma calculation. 
 
-#### Stress Test `stress_test.py`
+#### Spot Vol Stress `spot_vol_stress.py`
 Implements spot and vol shocks: 
 1. Vanilla stress test for linear positions and options
 2. A stress tree
@@ -72,7 +72,7 @@ Implements spot and vol shocks:
 #### Utils (`utils.py`)
 Includes various utility functions that assist with parameter processing, datetime manipulation, and other common tasks used throughout the project.
 
-#### Vol Surface `vol_surface_shocks.py`
+#### Vol Surface Stress`vol_surface_stress.py`
 Implements volatility surface shocks:
 1. Parallel shock
 2. Term structure shock
