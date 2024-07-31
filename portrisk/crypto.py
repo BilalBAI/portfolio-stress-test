@@ -8,8 +8,8 @@ import numpy as np
 
 from .core.utils import CryptoParameters, VolSurfaceParameters
 from .core.black_scholes import calc_delta, DELTA_PARAMETERS
-from .core.stress_test import StressTest
-from .core.vol_surface_shocks import Concentration, TermStructure, Skew, BidAsk
+from .core.spot_vol_stress import StressTest
+from .core.vol_surface_stress import Concentration, TermStructure, Skew, BidAsk
 
 
 class CryptoSpotVolShocks:
