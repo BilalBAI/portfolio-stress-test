@@ -8,7 +8,7 @@
         "time_to_expiry": "days_to_expiry / 365",
         "spot": "underlying spot price",
         "rate": "risk-free interest rate",
-        "vol": "volatility of the relative price change of the underlying stock price",
+        "vol": "implied volatility ",
         "put_call": "put or call",
         "cost_of_carry_rate": "set to default for BS (1973) stock option model"
     },
