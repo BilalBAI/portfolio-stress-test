@@ -5,9 +5,8 @@ from datetime import datetime, date
 
 import pandas as pd
 import numpy as np
-from pandas import DataFrame
 
-from ..utils import CryptoParameters, OptParameters
+from ..utils import CryptoParameters, VolSurfaceParameters
 from ..black_scholes import calc_delta, DELTA_PARAMETERS
 from .stress_test import StressTest
 from .vol_surface_shocks import Concentration, TermStructure, Skew, BidAsk
@@ -16,7 +15,6 @@ from .vol_surface_shocks import Concentration, TermStructure, Skew, BidAsk
 class CryptoSpotVolShocks:
     """
     data: DataFrame (Without Index decomposition)
-    symbol_level_data: DataFrame (With Index decomposition) // not applicable for cryptos
     config: build Config object using the relevant class in utils.
     """
 
@@ -123,7 +121,7 @@ class CryptoVolSurfaceShocks:
         Run Crypto Vol Surface Shocks
     """
 
-    def __init__(self, products: list, parameters: OptParameters):
+    def __init__(self, products: list, parameters: VolSurfaceParameters):
         self.products = products
         self.parameters = parameters
 
