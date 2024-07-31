@@ -4,9 +4,9 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame
 
-from ..utils import EquityParameters
-from ..black_scholes import calc_delta, DELTA_PARAMETERS
-from .stress_test import EQMultilevelST, StressTest
+from .core.utils import EquityParameters
+from .core.black_scholes import calc_delta, DELTA_PARAMETERS
+from .core.stress_test import EQMultilevelST, StressTest
 
 RISK_FIELDS = ['COUNTRY_ISO', 'ISSUER_BULK', 'MKT_CAP_USD_M', 'GICS_INDUSTRY_GROUP_NAME']
 

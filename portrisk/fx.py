@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..utils import EquityParameters
+from .core.utils import EquityParameters
 
 
 class FXRisk:

@@ -37,13 +37,14 @@ portfolio-stress-test/
 │   └── example_usage.py
 ├── portrisk/
 │   ├── core/
-│       ├── equity.py
-│       ├── fx.py
-│       ├── option.py
+│       ├── black_scholes.py
 │       ├── stress_tests.py
-│   ├── black_scholes.py
+│       ├── utils.py
+│       ├── vol_surface_shocks.py
 │   ├── clients.py
-│   ├── utils.py
+│   ├── crypto.py
+│   ├── equity.py
+│   ├── fx.py
 ├── tests/
 │   ├── test_data.py
 │   ├── test_models.py
@@ -58,36 +59,38 @@ portfolio-stress-test/
 
 ## Modules
 
-### Data Module (`clients.py`)
-
-This module handles the fetching and processing of required data for a given portfolio. It interfaces with the Bloomberg API to retrieve necessary data and supports caching to improve performance.
-
-### Black Scholes Module (`black_sholes.py`)
-
+### Core Modules (`core`)
+#### Black Scholes (`black_sholes.py`)
 A implementation of Generalized Black-Scholes-Merton Option Pricing model. Along with delta, vega and gamma calculation. 
 
-### Utils Module (`utils.py`)
-
-Includes various utility functions that assist with parameter processing, datetime manipulation, and other common tasks used throughout the project.
-
-### Core Module (`core`)
-
-#### `stress_test.py`
+#### Stress Test `stress_test.py`
 Implements spot and vol shocks: 
 1. Vanilla stress test for linear positions and options
 2. A stress tree
 3. Multilevel stress tests by combining vanilla stress test with stress tree
 
-#### `option.py`
+#### Utils (`utils.py`)
+Includes various utility functions that assist with parameter processing, datetime manipulation, and other common tasks used throughout the project.
+
+#### Vol Surface `vol_surface_shocks.py`
 Implements volatility surface shocks:
 1. Parallel shock
 2. Term structure shock
 3. Skew shock
 
-#### `equity.py`
+
+### Clients (`clients.py`)
+This module handles the fetching and processing of required data for a given portfolio. It interfaces with the Bloomberg API to retrieve necessary data and supports caching to improve performance.
+
+### Equity `equity.py`
 Implements equity shocks:
 1. Macro
 2. Sector
 3. Concentration
 4. Relative Value
 5. Delta liquidation
+
+### Crypto `crypto.py`
+Implements crypto shocks:
+1. Spot and Vol shocks
+2. Vol Surface Shocks

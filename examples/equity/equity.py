@@ -1,8 +1,8 @@
 import json
 from pandas import DataFrame
-from portrisk.utils import EquityParameters
+from portrisk.core.utils import EquityParameters
 from portrisk.clients import PortRiskClient
-from portrisk.core.equity import EquityRisk
+from portrisk.equity import EquityRisk
 
 PARAMS_SUB_DIR = 'data/parameters/'
 POS_DIR = 'data/positions.json'

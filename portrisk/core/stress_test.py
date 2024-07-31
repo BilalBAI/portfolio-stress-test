@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
-from ..black_scholes import bs_pricing, BS_PARAMETERS
+from .black_scholes import bs_pricing, BS_PARAMETERS
 
 COLUMNS = ['spot_shock', 'vol_shock', 'quantity', 'multiplier'] + BS_PARAMETERS
 
