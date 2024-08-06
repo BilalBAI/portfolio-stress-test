@@ -125,7 +125,12 @@ class CryptoVolSurfaceShocks:
         self.products = products
         self.parameters = parameters
 
-    def run(self, data, group, scenario, days_to_trade: int = -1, valuation_date: ty.Optional[date] = None):
+    def run(self, data, group:str = None, liquidity: bool = False, days_to_trade: int = None, valuation_date: ty.Optional[date] = None):
+        '''
+        if days_to_trade == None, days_to_trade will be auto calculated using 90vega and daily vega threshold
+        otherwise, use the sepcified days_to_trade.
+        
+        '''
         results = []
         liq_b = BidAsk()
         liq_c = Concentration()
@@ -134,7 +139,7 @@ class CryptoVolSurfaceShocks:
         for p in self.products:
             re, b, c, t, s = self.calc(data=data, days_to_trade=days_to_trade, valuation_date=valuation_date, **p)
             if re != {}:
-                if scenario == 'Liquidity':
+                if liquidity:
                     liq_b += b
                 liq_c += c
                 liq_t += t
@@ -162,7 +167,7 @@ class CryptoVolSurfaceShocks:
                     }
                 ]
             )
-            if scenario == 'Liquidity':
+            if liquidity:
                 liq_b.aggregate()
                 results.extend(
                     [
@@ -189,23 +194,26 @@ class CryptoVolSurfaceShocks:
                 )
             for i in results:
                 i['group'] = group
-                i['scenario'] = scenario
+                i['liquidity'] = liquidity
                 i['type'] = 'ix'
         return results
 
     def calc(
-        self, data, days_to_trade, product, class_, underlying, valuation_date: ty.Optional[date] = None
+        self, data, days_to_trade, product, class_, underlying, atm_ivol_3m, valuation_date: ty.Optional[date] = None
     ):
         df = data[data['Underlying'].isin(underlying)].copy()
         if df.empty:
             return {}, BidAsk(), Concentration(), TermStructure(), Skew()
-        df['PositionVega'] = df['PositionVega']  # * self.clients.get_fx(fx)
-        exp_3m_date = date.today() if valuation_date is None else valuation_date
-        exp_3m = min(
-            df['Expiry'].to_list(),
-            key=lambda x: abs((datetime.strptime(x, '%Y-%m-%d').date() - exp_3m_date).days - 90)
-        )
-        atm_ivol_3m = df.loc[df['Expiry'] == exp_3m, 'atm_ivol'].values[0]
+        df['PositionVega'] = df['PositionVega']
+
+        # # Get atm_ivol_3m if the data include all experies.
+        # exp_3m_date = date.today() if valuation_date is None else valuation_date
+        # exp_3m = min(
+        #     df['Expiry'].to_list(),
+        #     key=lambda x: abs((datetime.strptime(x, '%Y-%m-%d').date() - exp_3m_date).days - 90)
+        # )
+        # atm_ivol_3m = df.loc[df['Expiry'] == exp_3m, 'atm_ivol'].values[0]
+
         # Run models
         b = BidAsk(df, self.parameters.config_bid_ask(class_), valuation_date)
         c = Concentration(
@@ -233,7 +241,7 @@ class CryptoVolSurfaceShocks:
                 'value': s.skew_charge
             }
         ]
-        if days_to_trade == -1:
+        if days_to_trade == None:
             b.calc()
             re.extend(
                 [

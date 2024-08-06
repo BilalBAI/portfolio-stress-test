@@ -18,7 +18,7 @@ class Concentration:
         data: ty.Optional[pd.DataFrame] = None,
         atm_ivol_3m=0,
         config: ty.Mapping = MappingProxyType({}),
-        days_to_trade: int = -1,
+        days_to_trade: int = None,
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
@@ -58,7 +58,7 @@ class Concentration:
     def calc(self):
         self._calc_vega90days()
 
-        if self.days_to_trade == -1:
+        if self.days_to_trade is None:
             days_to_trade = abs(self.vega90d / self.config['3m'])
         else:
             days_to_trade = self.days_to_trade
@@ -90,7 +90,7 @@ class Skew:
         self,
         data: ty.Optional[pd.DataFrame] = None,
         config: ty.Mapping = MappingProxyType({}),
-        days_to_trade: int = -1,
+        days_to_trade: int = None,
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
@@ -112,7 +112,7 @@ class Skew:
         df['TTX'] = df['Expiry'] - df['Today']
         df['TTX'] = df['TTX'].astype('timedelta64[D]')
         df['WVPEB'] = 0
-        if self.days_to_trade == -1:
+        if self.days_to_trade is None:
             for i, row in df.iterrows():
                 TTX = row['TTX']
                 if TTX <= 30:
@@ -182,7 +182,7 @@ class TermStructure:
         self,
         data: ty.Optional[pd.DataFrame] = None,
         config: ty.Mapping = MappingProxyType({}),
-        days_to_trade: int = -1,
+        days_to_trade: int = None,
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
@@ -213,7 +213,7 @@ class TermStructure:
         df['TTX'] = df['Expiry'] - df['Today']
         df['TTX'] = df['TTX'].astype('timedelta64[D]')
         df['WVPEB'] = 0
-        if self.days_to_trade == -1:
+        if self.days_to_trade is None:
             for i, row in df.iterrows():
                 TTX = row['TTX']
                 if TTX <= 30:
