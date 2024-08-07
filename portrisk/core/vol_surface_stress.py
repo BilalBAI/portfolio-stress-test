@@ -38,7 +38,7 @@ class Concentration:
         df['Today'] = pd.to_datetime(df['Today'])
         df['Expiry'] = pd.to_datetime(df['Expiry'])
         df['TTX'] = df['Expiry'] - df['Today']
-        df['TTX'] = df['TTX'].astype('timedelta64[D]')
+        df['TTX'] = df['TTX'].dt.days
         df['vega_90days'] = (90 / df['TTX'])**0.4 * df['PositionVega']
         self.data = df
         self.vega90d = df['vega_90days'].sum()
@@ -110,8 +110,8 @@ class Skew:
         df['Today'] = pd.to_datetime(df['Today'])
         df['Expiry'] = pd.to_datetime(df['Expiry'])
         df['TTX'] = df['Expiry'] - df['Today']
-        df['TTX'] = df['TTX'].astype('timedelta64[D]')
-        df['WVPEB'] = 0
+        df['TTX'] = df['TTX'].dt.days
+        df['WVPEB'] = 0.0
         if self.days_to_trade is None:
             for i, row in df.iterrows():
                 TTX = row['TTX']
@@ -145,8 +145,8 @@ class Skew:
         df['Expiry'] = pd.to_datetime(df['Expiry'])
         tem = self._calc_DDT(self.data)
         df = pd.merge(df, tem[['Expiry', 'WVPEB', 'DTT', 'TTX']].drop_duplicates(), on='Expiry', how='left')
-        df['Omega'] = 0
-        df['SkewShockinVolPoints'] = 0
+        df['Omega'] = 0.0
+        df['SkewShockinVolPoints'] = 0.0
         for i, row in df.iterrows():
             DTT = row['DTT']
             if DTT <= 1:
@@ -156,10 +156,10 @@ class Skew:
             else:
                 omega = self.config['alpha'] * (30**self.config['beta'])
             df.loc[i, 'Omega'] = omega
-        # df['SkewShockinVolPoints'] = df['atm_ivol']*df['Omega']/2*abs(df['Delta']-0.5)
+        # df['SkewShockinVolPoints'] = df['atm_ivol']*df['Omega']/2*abs(df['delta']-0.5)
         df['SkewShockinVolPoints'] = df['atm_ivol'] * df['Omega'] / 2 * (
-            0.5 - df['Delta'].abs()
-        )   # CREST doc is using abs(df['Delta']-0.5) but GS report seems not. When we drop abs(), results are colser.
+            0.5 - df['delta'].abs()
+        )   # CREST doc is using abs(df['delta']-0.5) but GS report seems not. When we drop abs(), results are colser.
         self.data = df
 
     def calc(self):
@@ -211,8 +211,8 @@ class TermStructure:
         df['Today'] = pd.to_datetime(df['Today'])
         df['Expiry'] = pd.to_datetime(df['Expiry'])
         df['TTX'] = df['Expiry'] - df['Today']
-        df['TTX'] = df['TTX'].astype('timedelta64[D]')
-        df['WVPEB'] = 0
+        df['TTX'] = df['TTX'].dt.days
+        df['WVPEB'] = 0.0
         if self.days_to_trade is None:
             for i, row in df.iterrows():
                 TTX = row['TTX']
@@ -242,8 +242,8 @@ class TermStructure:
 
     def _calc_shocks(self, data_input):
         df = self._calc_DDT(data_input)
-        df['shock_a'] = 0
-        df['shock_r'] = 0
+        df['shock_a'] = 0.0
+        df['shock_r'] = 0.0
         for i, row in df.iterrows():
             TTX = row['TTX']
             DTT = row['DTT']
@@ -251,8 +251,8 @@ class TermStructure:
             shock_a1m = self._clac_omega(self.config['alpha_a1m'], self.config['beta_a1m'], DTT)
             shock_r1m = self._clac_omega(self.config['alpha_r1m'], self.config['beta_r1m'], DTT)
             # Apply a term structure shock at each expiry by rotating the curve up and down around the 3 month expiry
-            shock_a3m = 0
-            shock_r3m = 0
+            shock_a3m = 0.0
+            shock_r3m = 0.0
             shock_a6m = self._clac_omega(self.config['alpha_a6m'], self.config['beta_a6m'], DTT)
             shock_r6m = self._clac_omega(self.config['alpha_r6m'], self.config['beta_r6m'], DTT)
             shock_a1y = self._clac_omega(self.config['alpha_a1y'], self.config['beta_a1y'], DTT)
@@ -351,7 +351,7 @@ class IRVegaLiq:
         df['Today'] = pd.to_datetime(df['Today'])
         df['Expiry'] = pd.to_datetime(df['Expiry'])
         df['TTX'] = df['Expiry'] - df['Today']
-        df['TTX'] = df['TTX'].astype('timedelta64[D]')
+        df['TTX'] = df['TTX'].dt.days
         if any(df['TTX'] <= 0):
             raise Exception('Found expired contracts')
         # Vega90d: Sqrt of 90/t with a floor of 1, and cap of 2.
@@ -409,14 +409,14 @@ class BidAsk:
         config: ty.Mapping = MappingProxyType({'Factor': 0.0}),
         valuation_date: ty.Optional[date] = None
     ):
-        self.net_charge = 0
-        self.gross_charge = 0
-        self.bid_ask_charge = 0
+        self.net_charge = 0.0
+        self.gross_charge = 0.0
+        self.bid_ask_charge = 0.0
         self.vega90d_array = np.array([])
         self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
         self.bid_ask_factor = config['Factor']
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
-        self.vega90d: float = 0
+        self.vega90d: float = 0.0
 
     def __add__(self, other):
         self.net_charge = self.net_charge + other.bid_ask_charge
@@ -428,7 +428,7 @@ class BidAsk:
         df_orig = self.data
         s_today = pd.to_datetime(pd.Series(self.valuation_date, index=df_orig.index))
         s_expiry = pd.to_datetime(df_orig['Expiry'])
-        s_ttx = (s_expiry - s_today).astype('timedelta64[D]')
+        s_ttx = (s_expiry - s_today).dt.days
         s_vega_90days = (90 / s_ttx)**0.4 * df_orig['PositionVega']
         self.vega90d = s_vega_90days.sum()
 
