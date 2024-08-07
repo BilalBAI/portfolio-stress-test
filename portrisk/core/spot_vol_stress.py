@@ -24,28 +24,25 @@ class StressTest:
         spot_shock, vol_shock, spot, quantity, multiplier, vol, strike, put_call, time_to_expiry, rate,
         cost_of_carry_rate, **kwargs
     ):
-        if put_call not in ['put', 'call']:
-            return spot * spot_shock * quantity * multiplier
-        else:
-            pre_shock = bs_pricing(
-                strike=strike,
-                time_to_expiry=time_to_expiry,
-                spot=spot,
-                rate=rate,
-                vol=vol,
-                put_call=put_call,
-                cost_of_carry_rate=cost_of_carry_rate
-            )
-            post_shock = bs_pricing(
-                strike=strike,
-                time_to_expiry=time_to_expiry,
-                spot=spot * (1 + spot_shock),
-                rate=rate,
-                vol=vol * (1 + vol_shock),
-                put_call=put_call,
-                cost_of_carry_rate=cost_of_carry_rate
-            )
-            return (post_shock - pre_shock) * quantity * multiplier
+        pre_shock = bs_pricing(
+            strike=strike,
+            time_to_expiry=time_to_expiry,
+            spot=spot,
+            rate=rate,
+            vol=vol,
+            put_call=put_call,
+            cost_of_carry_rate=cost_of_carry_rate
+        )
+        post_shock = bs_pricing(
+            strike=strike,
+            time_to_expiry=time_to_expiry,
+            spot=spot * (1 + spot_shock),
+            rate=rate,
+            vol=vol * (1 + vol_shock),
+            put_call=put_call,
+            cost_of_carry_rate=cost_of_carry_rate
+        )
+        return (post_shock - pre_shock) * quantity * multiplier
 
 
 class StressTree:

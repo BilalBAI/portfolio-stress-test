@@ -1,20 +1,28 @@
 {
+    "external_data_requirements": {
+        "instrument": "Instrument name, e.g. BTC-25OCT24-50000-P",
+        "quantity": "number of contracts",
+        "spot": "underlying spot price at the valuation time",
+        "vol": "implied volatility at the valuation time",
+        "atm_vol": "At the money implied volatility for each expiry"
+    },
     "spot_vol_shocks": {
         "underlying": "underlying, e.g. BTC, ETH",
-        "market_price": "market price",
-        "quantity": "number of contracts",
-        "multiplier": "contract multiplier",
+        "expiry": "Expiry date",
         "strike": "strike price of option",
-        "time_to_expiry": "days_to_expiry / 365",
-        "spot": "underlying spot price",
-        "rate": "risk-free interest rate",
-        "vol": "implied volatility",
         "put_call": "put or call",
+        "multiplier": "contract multiplier",
+        "quantity": "number of contracts",
+        "time_to_expiry": "days_to_expiry / 365",
+        "rate": "risk-free interest rate",
+        "spot": "underlying spot price",
+        "vol": "implied volatility",
         "cost_of_carry_rate": "set to default for BS (1973) stock option model"
     },
     "vol_surface_shocks": {
-        "Expiry": "Expiry date",
-        "PositionVega": "Position Vega in dollars",
+        "expiry": "Expiry date",
+        "delta": "delta",
+        "position_vega": "Position Vega in dollars",
         "atm_ivol": "at the money implied vol for each expiry",
         "days_to_trade": "This will be calculated by the model using PositionVega and DailyVegaThreshold"
     }

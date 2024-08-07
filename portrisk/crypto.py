@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from .core.utils import CryptoParameters, VolSurfaceParameters
-from .core.black_scholes import calc_delta, DELTA_PARAMETERS
+from .core.black_scholes import calc_delta, calc_vega, BS_PARAMETERS
 from .core.spot_vol_stress import StressTest
 from .core.vol_surface_stress import Concentration, TermStructure, Skew, BidAsk
 
@@ -32,13 +32,6 @@ class CryptoSpotVolShocks:
             data['vol_shock'] = data['underlying'].map(shocks[k]['vol_shock'])
             data = st.shock_df(data, f"{k}")
             st_columns.append(f"{k}")
-        # Calc $delta = delta * quantity * multiplier * spot
-        data['delta'] = np.vectorize(
-            lambda spot, **DELTA_PARAMETERS: calc_delta(spot=spot, **DELTA_PARAMETERS) if spot > 0 else 0
-        )(**{col: data[col] for col in DELTA_PARAMETERS})
-        data['delta'] = data['delta'] * data['quantity'] * data[
-            'multiplier'] * data['spot']
-
         return data, st_columns
 
     # def rv_risk(self, df_input='default'):
@@ -131,6 +124,23 @@ class CryptoVolSurfaceShocks:
         otherwise, use the sepcified days_to_trade.
         
         '''
+        # Calc delta and position_delta
+        # Position Delta($) = Delta × Number of Contracts × Shares per Contract × Price of the Underlying Asset
+        data['delta'] = np.vectorize(
+            lambda spot, **BS_PARAMETERS: calc_delta(spot=spot, **BS_PARAMETERS) if spot > 0 else 0
+        )(**{col: data[col] for col in BS_PARAMETERS})
+        data['position_delta'] = data['delta'] * data['quantity'] * data[
+            'multiplier'] * data['spot']
+        
+        # Calc vega and position_vega
+        # Position Vega($) = Vega × ΔIV × Number of Contracts × Shares per Contract
+        data['vega'] = np.vectorize(
+            lambda spot, **BS_PARAMETERS: calc_vega(spot=spot, **BS_PARAMETERS) if spot > 0 else 0
+        )(**{col: data[col] for col in BS_PARAMETERS})
+        data['position_vega'] = data['vega'] * data['quantity'] * data[
+            'multiplier']
+        
+        # Run Stress tests
         results = []
         liq_b = BidAsk()
         liq_c = Concentration()
@@ -204,15 +214,14 @@ class CryptoVolSurfaceShocks:
         df = data[data['underlying'].isin(underlying)].copy()
         if df.empty:
             return {}, BidAsk(), Concentration(), TermStructure(), Skew()
-        df['PositionVega'] = df['PositionVega']
 
         # Get atm_ivol_3m if the data include all experies.
         exp_3m_date = date.today() if valuation_date is None else valuation_date
         exp_3m = min(
-            df['Expiry'].to_list(),
+            df['expiry'].to_list(),
             key=lambda x: abs((datetime.strptime(x, '%Y-%m-%d').date() - exp_3m_date).days - 90)
         )
-        atm_ivol_3m = df.loc[df['Expiry'] == exp_3m, 'atm_ivol'].values[0]
+        atm_ivol_3m = df.loc[df['expiry'] == exp_3m, 'atm_ivol'].values[0]
         # atm_ivol_3m = df['atm_ivol_3m'].values[0]
         # Run models
         b = BidAsk(df, self.parameters.config_bid_ask(class_), valuation_date)

@@ -22,7 +22,7 @@ class Concentration:
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
-        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
+        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['expiry', 'position_vega'])
         self.config = config
         self.atm_ivol_3m = atm_ivol_3m
         self.days_to_trade = days_to_trade
@@ -36,10 +36,10 @@ class Concentration:
         df = self.data.copy()
         df['Today'] = self.valuation_date
         df['Today'] = pd.to_datetime(df['Today'])
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
-        df['TTX'] = df['Expiry'] - df['Today']
+        df['expiry'] = pd.to_datetime(df['expiry'])
+        df['TTX'] = df['expiry'] - df['Today']
         df['TTX'] = df['TTX'].dt.days
-        df['vega_90days'] = (90 / df['TTX'])**0.4 * df['PositionVega']
+        df['vega_90days'] = (90 / df['TTX'])**0.4 * df['position_vega']
         self.data = df
         self.vega90d = df['vega_90days'].sum()
 
@@ -94,7 +94,7 @@ class Skew:
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
-        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
+        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['expiry', 'position_vega'])
         self.config = config
         self.days_to_trade = days_to_trade
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
@@ -104,12 +104,12 @@ class Skew:
         return self
 
     def _calc_DDT(self, df):
-        df = df[['Expiry', 'PositionVega']]
-        df = df[['Expiry', 'PositionVega']].groupby(by='Expiry', as_index=False).sum()
+        df = df[['expiry', 'position_vega']]
+        df = df[['expiry', 'position_vega']].groupby(by='expiry', as_index=False).sum()
         df['Today'] = self.valuation_date
         df['Today'] = pd.to_datetime(df['Today'])
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
-        df['TTX'] = df['Expiry'] - df['Today']
+        df['expiry'] = pd.to_datetime(df['expiry'])
+        df['TTX'] = df['expiry'] - df['Today']
         df['TTX'] = df['TTX'].dt.days
         df['WVPEB'] = 0.0
         if self.days_to_trade is None:
@@ -133,18 +133,18 @@ class Skew:
                     df.loc[i, 'WVPEB'] = (TTX - 360) / 360 * self.config['2y'] + (720 - TTX) / 360 * self.config['1y']
                 elif TTX >= 720:
                     df.loc[i, 'WVPEB'] = self.config['2y']
-            df['DTT'] = df['PositionVega'] / df['WVPEB']
+            df['DTT'] = df['position_vega'] / df['WVPEB']
             df['DTT'] = df['DTT'].abs()
         else:
             df['DTT'] = self.days_to_trade
         self.check = df
-        return df[['Expiry', 'DTT', 'TTX', 'WVPEB']]
+        return df[['expiry', 'DTT', 'TTX', 'WVPEB']]
 
     def _calc_vol_shock(self):
         df = self.data.copy()
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
+        df['expiry'] = pd.to_datetime(df['expiry'])
         tem = self._calc_DDT(self.data)
-        df = pd.merge(df, tem[['Expiry', 'WVPEB', 'DTT', 'TTX']].drop_duplicates(), on='Expiry', how='left')
+        df = pd.merge(df, tem[['expiry', 'WVPEB', 'DTT', 'TTX']].drop_duplicates(), on='expiry', how='left')
         df['Omega'] = 0.0
         df['SkewShockinVolPoints'] = 0.0
         for i, row in df.iterrows():
@@ -164,7 +164,7 @@ class Skew:
 
     def calc(self):
         self._calc_vol_shock()
-        self.data['SkewCharge'] = self.data['SkewShockinVolPoints'] * self.data['PositionVega']
+        self.data['SkewCharge'] = self.data['SkewShockinVolPoints'] * self.data['position_vega']
         self.skew_charge = self.data['SkewCharge'].sum()
         self.skew_charge = -abs(self.skew_charge)
         self.charge_array = np.append(self.charge_array, self.skew_charge)
@@ -186,7 +186,7 @@ class TermStructure:
         valuation_date: ty.Optional[date] = None
     ):
         self.charge_array = np.array([])
-        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
+        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['expiry', 'position_vega'])
         self.config = config
         self.days_to_trade = days_to_trade
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
@@ -205,12 +205,12 @@ class TermStructure:
         return w
 
     def _calc_DDT(self, df):
-        df = df[['Expiry', 'PositionVega']]
-        df = df[['Expiry', 'PositionVega']].groupby(by='Expiry', as_index=False).sum()
+        df = df[['expiry', 'position_vega']]
+        df = df[['expiry', 'position_vega']].groupby(by='expiry', as_index=False).sum()
         df['Today'] = self.valuation_date
         df['Today'] = pd.to_datetime(df['Today'])
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
-        df['TTX'] = df['Expiry'] - df['Today']
+        df['expiry'] = pd.to_datetime(df['expiry'])
+        df['TTX'] = df['expiry'] - df['Today']
         df['TTX'] = df['TTX'].dt.days
         df['WVPEB'] = 0.0
         if self.days_to_trade is None:
@@ -234,11 +234,11 @@ class TermStructure:
                     df.loc[i, 'WVPEB'] = (TTX - 360) / 360 * self.config['2y'] + (720 - TTX) / 360 * self.config['1y']
                 elif TTX >= 720:
                     df.loc[i, 'WVPEB'] = self.config['2y']
-            df['DTT'] = df['PositionVega'] / df['WVPEB']
+            df['DTT'] = df['position_vega'] / df['WVPEB']
             df['DTT'] = df['DTT'].abs()
         else:
             df['DTT'] = self.days_to_trade
-        return df[['Expiry', 'PositionVega', 'DTT', 'TTX', 'WVPEB']]
+        return df[['expiry', 'position_vega', 'DTT', 'TTX', 'WVPEB']]
 
     def _calc_shocks(self, data_input):
         df = self._calc_DDT(data_input)
@@ -287,14 +287,14 @@ class TermStructure:
                 df.loc[i, 'shock_a'] = shock_a2y
                 df.loc[i, 'shock_r'] = shock_r2y
         self.check = df
-        return df[['Expiry', 'PositionVega', 'DTT', 'TTX', 'WVPEB', 'shock_a', 'shock_r']]
+        return df[['expiry', 'position_vega', 'DTT', 'TTX', 'WVPEB', 'shock_a', 'shock_r']]
 
     def calc(self):
         df = self.data.copy()
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
+        df['expiry'] = pd.to_datetime(df['expiry'])
         tem = self._calc_shocks(df)
         df = pd.merge(
-            df, tem[['Expiry', 'DTT', 'TTX', 'WVPEB', 'shock_a', 'shock_r']].drop_duplicates(), on='Expiry', how='left'
+            df, tem[['expiry', 'DTT', 'TTX', 'WVPEB', 'shock_a', 'shock_r']].drop_duplicates(), on='expiry', how='left'
         )
         df['shock_r*vol'] = df['shock_r'] * df['atm_ivol'
                                               ]   # by rotating the curve up and down around the 3 month expiry
@@ -309,8 +309,8 @@ class TermStructure:
                 df.loc[i, 'adjusted_shock'] = -tem
             df.loc[i, 'shock'] = shock
         # self.ckeck2=df
-        df['TermCharge'] = df['adjusted_shock'] / 2 * df['PositionVega']
-        # df['TermCharge'] = df['shock_r*vol']/2*df['PositionVega']
+        df['TermCharge'] = df['adjusted_shock'] / 2 * df['position_vega']
+        # df['TermCharge'] = df['shock_r*vol']/2*df['position_vega']
 
         self.data = df
         self.term_charge = -abs(self.data['TermCharge'].sum())
@@ -339,9 +339,9 @@ class IRVegaLiq:
     ):
         self.config = config
         df: pd.DataFrame = data if data is not None else pd.DataFrame(
-            columns=['Expiry', 'Strike', 'Quantity', 'PositionVega']
+            columns=['expiry', 'Strike', 'Quantity', 'position_vega']
         )
-        self.data = df[['Expiry', 'Strike', 'Quantity', 'PositionVega']].fillna(0)   # 'InstrumentId'
+        self.data = df[['expiry', 'Strike', 'Quantity', 'position_vega']].fillna(0)   # 'InstrumentId'
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
         self._calc_vega90days()
 
@@ -349,13 +349,13 @@ class IRVegaLiq:
         df = self.data.copy()
         df['Today'] = self.valuation_date
         df['Today'] = pd.to_datetime(df['Today'])
-        df['Expiry'] = pd.to_datetime(df['Expiry'])
-        df['TTX'] = df['Expiry'] - df['Today']
+        df['expiry'] = pd.to_datetime(df['expiry'])
+        df['TTX'] = df['expiry'] - df['Today']
         df['TTX'] = df['TTX'].dt.days
         if any(df['TTX'] <= 0):
             raise Exception('Found expired contracts')
         # Vega90d: Sqrt of 90/t with a floor of 1, and cap of 2.
-        df['Vega90d'] = df.apply(lambda row: max(1, min(2, (90 / row['TTX'])**0.5)) * row['PositionVega'], axis=1)
+        df['Vega90d'] = df.apply(lambda row: max(1, min(2, (90 / row['TTX'])**0.5)) * row['position_vega'], axis=1)
         self.data = df
 
     def calc_hedging_charge(self):
@@ -368,19 +368,19 @@ class IRVegaLiq:
         self.hedge_charge = self.Hccy + self.Hcontract
 
     def calc_fees(self):
-        df = self.data[['Expiry', 'Strike', 'Quantity']]
-        df = df.groupby(by=['Expiry', 'Strike'], as_index=False).sum()
+        df = self.data[['expiry', 'Strike', 'Quantity']]
+        df = df.groupby(by=['expiry', 'Strike'], as_index=False).sum()
         self.fees = -(self.config['Fees'] * df['Quantity']).abs().sum()
 
     def calc_exit_charge(self):
-        df = self.data[['PositionVega', 'TTX', 'Quantity', 'Strike']]
+        df = self.data[['position_vega', 'TTX', 'Quantity', 'Strike']]
         df = df.groupby(by=['TTX', 'Strike'], as_index=False).sum()
         df['TermAdj'] = df['TTX'].apply(lambda t: min(self.config['Tcap'], self.config['Tcap']**((t - 90) / 640)))
         df['SizeAdj'] = df['Quantity'].apply(lambda q: max(1, (abs(q) / 10000)**0.5))
         df['ExitCharge'] = 0.1 * df['Quantity'] * df['TermAdj'] * df['SizeAdj'] * self.config['Edge']
         df['ExitCharge'] = -df['ExitCharge'].abs()
         self.exit_gross_chargeA = -sum(df['ExitCharge']**2)**0.5
-        self.exit_gross_chargeB = -sum(df['PositionVega'].abs()) * 0.125
+        self.exit_gross_chargeB = -sum(df['position_vega'].abs()) * 0.125
         self.exit_charge = min(self.exit_gross_chargeA, self.exit_gross_chargeB)
 
     def calc(self):
@@ -413,7 +413,7 @@ class BidAsk:
         self.gross_charge = 0.0
         self.bid_ask_charge = 0.0
         self.vega90d_array = np.array([])
-        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['Expiry', 'PositionVega'])
+        self.data: pd.DataFrame = data if data is not None else pd.DataFrame(columns=['expiry', 'position_vega'])
         self.bid_ask_factor = config['Factor']
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
         self.vega90d: float = 0.0
@@ -427,9 +427,9 @@ class BidAsk:
     def _calc_vega90days(self):
         df_orig = self.data
         s_today = pd.to_datetime(pd.Series(self.valuation_date, index=df_orig.index))
-        s_expiry = pd.to_datetime(df_orig['Expiry'])
+        s_expiry = pd.to_datetime(df_orig['expiry'])
         s_ttx = (s_expiry - s_today).dt.days
-        s_vega_90days = (90 / s_ttx)**0.4 * df_orig['PositionVega']
+        s_vega_90days = (90 / s_ttx)**0.4 * df_orig['position_vega']
         self.vega90d = s_vega_90days.sum()
 
     def calc(self):

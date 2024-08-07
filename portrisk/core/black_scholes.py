@@ -54,17 +54,18 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
         b = r
     else:
         b = cost_of_carry_rate
-    if put_call in ['put', 'call']:
+    # Run BS pricing for put and call, if not an option (not a put nor a call), return spot 
+    if put_call in ['put', 'call', 'p', 'c']:
         d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
         d2 = d1 - vol * time_to_expiry**0.5
-        if put_call == 'call':
+        if put_call in ['call', 'c']:
             return spot * math.exp(time_to_expiry *
                                    (b - r)) * norm.cdf(d1) - strike * math.exp(-r * time_to_expiry) * norm.cdf(d2)
         else:
             return strike * math.exp(-r * time_to_expiry) * norm.cdf(-d2) - spot * math.exp(time_to_expiry *
                                                                                             (b - r)) * norm.cdf(-d1)
     else:
-        raise Exception('Option type should be [put] or [call]')
+        return spot
 
 
 def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
@@ -89,6 +90,8 @@ def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
 
 def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
     r = rate
+    # All else equal, vega for a put is equal to vega of a call
+    # Here, put_call is used to decide whether the position is an option
     # return 0 if not an option type
     if put_call not in ['put', 'call', 'p', 'c']:
         return 0
