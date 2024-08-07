@@ -89,12 +89,13 @@ def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
 
 
 def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
-    r = rate
     # All else equal, vega for a put is equal to vega of a call
     # Here, put_call is used to decide whether the position is an option
     # return 0 if not an option type
     if put_call not in ['put', 'call', 'p', 'c']:
         return 0
+    
+    r = rate
     # Price Expired Option and 0 vol as 0
     if (time_to_expiry <= 0) or (vol == 0):
         return 0
@@ -108,7 +109,13 @@ def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_r
     return vega / 100
 
 
-def calc_gamma(strike, time_to_expiry, spot, rate, vol, cost_of_carry_rate='default'):
+def calc_gamma(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
+    # All else equal, gamma for a put is equal to gamma of a call
+    # Here, put_call is used to decide whether the position is an option
+    # return 0 if not an option type
+    if put_call not in ['put', 'call', 'p', 'c']:
+        return 0
+    
     r = rate
     if cost_of_carry_rate == 'default':
         b = r
