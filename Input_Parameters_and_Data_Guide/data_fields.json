@@ -15,7 +15,7 @@
     "vol_surface_shocks": {
         "Expiry": "Expiry date",
         "PositionVega": "Position Vega in dollars",
-        "atm_ivol_3m": "3 month at the money implied vol",
+        "atm_ivol": "at the money implied vol for each expiry",
         "days_to_trade": "This will be calculated by the model using PositionVega and DailyVegaThreshold"
     }
 }
