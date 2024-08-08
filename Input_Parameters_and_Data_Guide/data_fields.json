@@ -1,10 +1,10 @@
 {
     "external_data_requirements": {
         "instrument": "Instrument name, e.g. BTC-25OCT24-50000-P",
-        "quantity": "number of contracts",
+        "quantity": "number of contracts holding",
         "spot": "underlying spot price at the valuation time",
-        "vol": "implied volatility at the valuation time",
-        "atm_vol": "At the money implied volatility for each expiry"
+        "ivol": "implied volatility at the valuation time",
+        "atm_ivol": "At the money implied volatility for each expiry"
     },
     "spot_vol_shocks": {
         "underlying": "underlying, e.g. BTC, ETH",
