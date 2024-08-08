@@ -3,47 +3,88 @@ import pandas as pd
 
 # Get list of instrument from deribit
 
-url = 'https://deribit.com/api/v2/public/get_instruments'
-coins = ['BTC', 'ETH']
-expiry_dates = ['4JUL24', '26JUL24', '29JUL24', '30AUG24', '27SEP24','30DEC24']
 
-def get_instruments(url = url, coins = coins, expiry_dates = expiry_dates):
-  instruments = []
-  for coin in coins:
-    r = requests.get(url, params = {'currency': coin,
-                                    'expired': 'false',
-                                    'kind': 'option'})
-    for result in r.json()['result']:
-      if any(x in result['instrument_name'] for x in expiry_dates):
-        instruments.append(result['instrument_name'])
-  print(f'{len(instruments)} instruments have been crawled.')
-  return instruments
+def get_instruments(url='https://deribit.com/api/v2/public/get_instruments',
+                    coins: list = ['BTC', 'ETH']):
+    instruments = []
+    for coin in coins:
+        r = requests.get(url, params={'currency': coin,
+                                      'expired': 'false',
+                                      'kind': 'option'})
+        for result in r.json()['result']:
+            instruments.append(result['instrument_name'])
+    print(f'{len(instruments)} instruments have been crawled.')
+    return instruments
 
+# get undelying index prices
+
+
+def get_index_price(url='https://deribit.com/api/v2/public/get_index_price',
+                    coins: list = ['BTC', 'ETH']):
+    index_prices = {}
+    for coin in coins:
+        r = requests.get(url, params={'index_name': f"{coin.lower()}_usd"})
+        index_prices[coin] = r.json()['result']['index_price']
+    return index_prices
 
 
 # Get the order book from deribit
-url = 'https://deribit.com/api/v2/public/get_order_book'
-depth = 10
 attributes = ['underlying_price', 'timestamp', 'mark_iv', 'instrument_name',
               'index_price', 'greeks', 'bid_iv', 'ask_iv', 'best_bid_price', 'best_ask_price']
 
-def get_order_book(instruments,url = url,depth = depth,attributes = attributes):
-  data = {}
-  for instrument in instruments:
-    r = requests.get(url, params = {'depth': depth,
-                                    'instrument_name': instrument})
-    c = r.json()['result']
-    for attribute in attributes:
-      if attribute == 'greeks':
-        for greek in c[attribute].keys():
-          if greek not in data.keys():
-            data[greek]= [c[attribute][greek]]
-          else:
-            data[greek].append(c[attribute][greek])
-      else:
-        if attribute not in data.keys():
-          data[attribute]= [c[attribute]]
-        else:
-          data[attribute].append(c[attribute])
-  data = pd.DataFrame(data)
-  return data
+
+def get_order_book(instruments, url='https://deribit.com/api/v2/public/get_order_book',
+                   depth=1, attributes=attributes):
+    data = {}
+    for instrument in instruments:
+        r = requests.get(url, params={'depth': depth,
+                                      'instrument_name': instrument})
+        c = r.json()['result']
+        for attribute in attributes:
+            if attribute == 'greeks':
+                for greek in c[attribute].keys():
+                    if greek not in data.keys():
+                        data[greek] = [c[attribute][greek]]
+                    else:
+                        data[greek].append(c[attribute][greek])
+            else:
+                if attribute not in data.keys():
+                    data[attribute] = [c[attribute]]
+                else:
+                    data[attribute].append(c[attribute])
+    data = pd.DataFrame(data)
+    return data
+
+# get at the money implied vol for each expiry
+
+
+def get_atm_ivol(coins: list = ['BTC', 'ETH']):
+    all_instruments = get_instruments(coins=coins)
+    df_all_instruments = pd.DataFrame({'instrument': all_instruments})
+    df_all_instruments[['underlying', 'expiry', 'strike', 'put_call']
+        ] = df_all_instruments['instrument'].str.split('-', expand=True)
+    df_all_instruments['strike'] = df_all_instruments['strike'].astype(float)
+    df_all_instruments['put_call'] = df_all_instruments['put_call'].map({'P': 'put', 'C': 'call'})
+    # df_all_instruments['expiry'] = pd.to_datetime(df_all_instruments['expiry'], format='%d%b%y')
+    all_index_prices = get_index_price()
+
+    atm_strike_map = []
+    for u in df_all_instruments['underlying'].unique().tolist():
+        # atm_strike_map[u] = []
+        tem = df_all_instruments[df_all_instruments['underlying'].isin([u])].copy().reset_index(drop=True)
+        for e in tem['expiry'].unique().tolist():
+            tem_ex = tem[tem['expiry'] == e].copy().reset_index(drop=True)
+            # Find the closest value in column strike to the spot
+            atm_strike = tem_ex['strike'].iloc[(tem_ex['strike'] - all_index_prices[u]).abs().argsort()[0]]
+            # Retrieve the corresponding value from column vol
+            atm_strike_map.append(f"{u}-{str(e)[0:10]}-{int(atm_strike)}-C")
+
+    df_atm = df_all_instruments[df_all_instruments['instrument'].isin(atm_strike_map)].reset_index(drop=True)
+    df_atm = get_order_book(df_atm['instrument'].to_list(), attributes=['instrument_name', 'mark_iv'])
+    df_atm['atm_ivol'] = df_atm['mark_iv']
+    df_atm[['underlying', 'expiry', 'strike', 'put_call']] = df_atm['instrument_name'].str.split('-', expand=True)
+    df_atm['underlying-expiry'] = df_atm['underlying'] + "-" + df_atm['expiry']
+    df_atm['atm_strike'] = df_atm['strike']
+    df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol']]
+
+    return df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol']]
