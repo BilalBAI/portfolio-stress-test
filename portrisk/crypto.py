@@ -10,6 +10,7 @@ from .core.utils import CryptoParameters, VolSurfaceParameters
 from .core.black_scholes import calc_delta, calc_vega, BS_PARAMETERS
 from .core.spot_vol_stress import StressTest
 from .core.vol_surface_stress import Concentration, TermStructure, Skew, BidAsk
+from .clients.deribit import DeribitClient
 
 
 class CryptoSpotVolShocks:
@@ -118,11 +119,11 @@ class CryptoVolSurfaceShocks:
         self.parameters = parameters
         self.products = parameters.parameters['products']
 
-    def run(self, data, group:str = None, liquidity: bool = False, days_to_trade: int = None, valuation_date: ty.Optional[date] = None):
+    def run(self, data, group: str = None, liquidity: bool = False, days_to_trade: int = None, valuation_date: ty.Optional[date] = None):
         '''
         if days_to_trade == None, days_to_trade will be auto calculated using 90vega and daily vega threshold
         otherwise, use the sepcified days_to_trade.
-        
+
         '''
         # Calc delta and position_delta
         # Position Delta($) = Delta × Number of Contracts × Shares per Contract × Price of the Underlying Asset
@@ -131,7 +132,7 @@ class CryptoVolSurfaceShocks:
         )(**{col: data[col] for col in BS_PARAMETERS})
         data['position_delta'] = data['delta'] * data['quantity'] * data[
             'multiplier'] * data['spot']
-        
+
         # Calc vega and position_vega
         # Position Vega($) = Vega × ΔIV × Number of Contracts × Shares per Contract
         data['vega'] = np.vectorize(
@@ -139,7 +140,7 @@ class CryptoVolSurfaceShocks:
         )(**{col: data[col] for col in BS_PARAMETERS})
         data['position_vega'] = data['vega'] * data['quantity'] * data[
             'multiplier']
-        
+
         # Run Stress tests
         results = []
         liq_b = BidAsk()
@@ -276,3 +277,39 @@ class CryptoVolSurfaceShocks:
                 ]
             )
         return re, b, c, t, s
+
+
+def fetch_market_data(df_positions: pd.DataFrame):
+    """
+        df_positions[['instrument','quantity']]
+    """
+    df = df_positions.copy()
+    # Splitting the 'instrument' column by "-"
+    df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
+    df['strike'] = df['strike'].astype(float)
+    df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
+    df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
+    df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
+    # Calculate time to expiry
+    valuation_day = pd.to_datetime('2024-08-05')
+    df['time_to_expiry'] = (df['expiry'] - valuation_day).dt.days / 365
+    # convert expiry to a string
+    df['expiry'] = df['expiry'].dt.strftime('%Y-%m-%d')
+
+    # get market data from deribit
+    db_client = DeribitClient()
+    deribit_res = db_client.get_order_book(instruments=df['instrument'].to_list())
+    df = pd.merge(df, deribit_res, how='left', left_on='instrument', right_on='instrument_name')
+
+    # calculate input for BSM
+    df['cost_of_carry_rate'] = 'default'
+    df['multiplier'] = 1
+    df['rate'] = 0.03
+    df['vol'] = df['mark_iv'] / 100
+    df['spot'] = df['index_price'].values[0]
+    # df['position_vega'] = df['vega'] * df['quantity']
+
+    # calculate atm_ivol
+    df_atm = db_client.get_atm_ivol()
+    df = pd.merge(df, df_atm, on='underlying-expiry', how='left')
+    return df
