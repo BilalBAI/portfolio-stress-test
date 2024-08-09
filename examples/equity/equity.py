@@ -1,7 +1,7 @@
 import json
 from pandas import DataFrame
 from portrisk.core.utils import EquityParameters
-from portrisk.clients import PortRiskClient
+from portrisk.clients.clients import PortRiskClient
 from portrisk.equity import EquityRisk
 
 PARAMS_SUB_DIR = 'data/parameters/'
