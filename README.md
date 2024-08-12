@@ -6,12 +6,35 @@ PortStress is a Python-based stress testing tool designed to evaluate portfolio 
 
 ## Installation
 
-Run the following to create the portstress conda environment:
+Run the following to create a portstress conda environment:
 
 ```bash
 conda create -n portstress python=3.12 pip wheel
 conda activate portstress
 python -m pip install -e .
+```
+
+Run the following to create a portstress venv:
+
+```bash
+# Create the virtual environment with Python 3.12
+which python3.12
+python3.12 -m venv portstress_env
+
+# Activate the virtual environment
+# Windows
+portstress_env\Scripts\activate
+# macOS / Linux
+source portstress_env/bin/activate
+
+# Verify the Python version
+python --version
+
+# Install dependencies
+python -m pip install -e .
+
+# Deactivate the virtual environment when done
+deactivate
 ```
 
 ### `.env`
@@ -25,7 +48,7 @@ In the `.env` you need the following keys:
 BBG_CACHE_DB_DIR=<DIR>
 ```
 
-Bloomberg API access is required.
+Bloomberg API access is required for equity stress test.
 
 
 ## Repository Structure
