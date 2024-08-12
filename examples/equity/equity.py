@@ -1,8 +1,8 @@
 import json
 from pandas import DataFrame
-from portrisk.core.utils import EquityParameters
-from portrisk.clients.clients import PortRiskClient
-from portrisk.equity import EquityRisk
+from portstress.core.utils import EquityParameters
+from portstress.clients.clients import PortStressClient
+from portstress.equity import EquityRisk
 
 PARAMS_SUB_DIR = 'data/parameters/'
 POS_DIR = 'data/positions.json'
@@ -37,7 +37,7 @@ def run():
     df_fx = DataFrame(get_json(FX_DIR))
     df_pos = DataFrame(get_json(POS_DIR))
 
-    risk_client = PortRiskClient(df_fx)
+    risk_client = PortStressClient(df_fx)
     parameters = EquityParameters(**get_risk_params(sub_dir=PARAMS_SUB_DIR))
     risk_data = risk_client.get_all(df_pos)
 

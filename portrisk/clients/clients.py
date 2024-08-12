@@ -106,7 +106,8 @@ class BloombergClient(BlpQuery):
             fields = [fields]
         self.data_points = self.data_points + (len(tickers) * len(fields))
         print(
-            f"Requesting Bloomberg Ref: {len(tickers)} tickers x {len(fields)} fields = {len(tickers)*len(fields)} Data Points"
+            f"Requesting Bloomberg Ref: {len(tickers)} tickers x {len(fields)} fields = {
+                len(tickers) * len(fields)} Data Points"
         )
         print(f"Total Data Points Requested: {self.data_points}")
         re_list = []
@@ -126,7 +127,8 @@ class BloombergClient(BlpQuery):
             fields = [fields]
         self.data_points = self.data_points + (len(tickers) * len(fields))
         print(
-            f"Requesting Bloomberg Bulkref: {len(tickers)} tickers x {len(fields)} fields = {len(tickers)*len(fields)} Data Points"
+            f"Requesting Bloomberg Bulkref: {len(tickers)} tickers x {len(fields)} fields = {
+                len(tickers) * len(fields)} Data Points"
         )
         print(f"Total Data Points Requested: {self.data_points}")
         try:
@@ -138,15 +140,15 @@ class BloombergClient(BlpQuery):
 
     def _read_db(self, tickers: list, fields: list):
         sql_select = f""" SELECT * from {self._table_name}
-                            WHERE ticker in {str(tickers).replace('[','(').replace(']',')')} 
-                            AND field in {str(fields).replace('[','(').replace(']',')')} """
+                            WHERE ticker in {str(tickers).replace('[', '(').replace(']', ')')}
+                            AND field in {str(fields).replace('[', '(').replace(']', ')')} """
         return pd.read_sql(sql_select, con=self.engine)
 
     def _write_db(self, new_data: DataFrame):
         new_data.dropna().to_sql(f'{self._table_name}', con=self.engine, if_exists='append', index=False)
 
 
-class PortRiskClient:
+class PortStressClient:
 
     def __init__(self, df_fx: DataFrame):
         '''

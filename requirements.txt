@@ -11,24 +11,24 @@ iniconfig==2.0.0
 numpy==2.0.1
     # via
     #   pandas
-    #   portrisk (setup.py)
+    #   portstress (setup.py)
     #   scipy
 packaging==24.1
     # via pytest
 pandas==2.2.2
-    # via portrisk (setup.py)
+    # via portstress (setup.py)
 pluggy==1.5.0
     # via pytest
 pytest==8.3.2
     # via pytest-cov
 pytest-cov==5.0.0
-    # via portrisk (setup.py)
+    # via portstress (setup.py)
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.1
     # via pandas
 scipy==1.14.0
-    # via portrisk (setup.py)
+    # via portstress (setup.py)
 six==1.16.0
     # via python-dateutil
 tzdata==2024.1

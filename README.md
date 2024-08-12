@@ -1,16 +1,16 @@
-# PortRisk
+# PortStress
 
-PortRisk is a Python-based stress testing tool designed to evaluate portfolio risk under various stress scenarios. It leverages the Bloomberg API for data retrieval and offers a modular structure for customizable and flexible usage.
+PortStress is a Python-based stress testing tool designed to evaluate portfolio risk under various stress scenarios. It leverages the Bloomberg API for data retrieval and offers a modular structure for customizable and flexible usage.
 
 [High-level Framework Introduction](https://docs.google.com/document/d/1AtpFLNE6FaWGK_ipJyhvnKF6hI-dhDRQBLVtB7vZpWI/edit?usp=sharing)
 
 ## Installation
 
-Run the following to create the portrisk conda environment:
+Run the following to create the portstress conda environment:
 
 ```bash
-conda create -n portrisk python=3.12 pip wheel
-conda activate portrisk
+conda create -n portstress python=3.12 pip wheel
+conda activate portstress
 python -m pip install -e .
 ```
 
@@ -19,7 +19,7 @@ python -m pip install -e .
 In the `.env` you need the following keys:
 
 ```ini
-# Dir to a sqlite db for BBG Cached data. e.g. C:/portrisk/db/ 
+# Dir to a sqlite db for BBG Cached data. e.g. C:/portstress/db/ 
 # Default to ./ if not provided
 # Auto create new db if db doesn't exist
 BBG_CACHE_DB_DIR=<DIR>
@@ -35,7 +35,7 @@ portfolio-stress-test/
 │
 ├── examples/
 │   └── example_usage.py
-├── portrisk/
+├── portstress/
 │   ├── core/
 │       ├── black_scholes.py
 │       ├── stress_tests.py

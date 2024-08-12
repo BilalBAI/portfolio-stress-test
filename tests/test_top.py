@@ -1,5 +1,5 @@
-from portrisk import core
-from portrisk.core import black_scholes, utils
+from portstress import core
+from portstress.core import black_scholes, utils
 
 
 def test_top_level_imports():
