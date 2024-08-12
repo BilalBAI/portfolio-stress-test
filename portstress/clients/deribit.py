@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import datetime
 
 # Get list of instrument from deribit
 ATTRIBUTES = ['underlying_price', 'timestamp', 'mark_iv', 'instrument_name',
@@ -88,6 +89,6 @@ class DeribitClient:
         df_atm[['underlying', 'expiry', 'strike', 'put_call']] = df_atm['instrument_name'].str.split('-', expand=True)
         df_atm['underlying-expiry'] = df_atm['underlying'] + "-" + df_atm['expiry']
         df_atm['atm_strike'] = df_atm['strike']
-        df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol']]
+        df_atm['timestamp_atm_ivol'] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
 
-        return df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol']]
+        return df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol', 'timestamp_atm_ivol']]
