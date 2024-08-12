@@ -279,7 +279,7 @@ class CryptoVolSurfaceShocks:
         return re, b, c, t, s
 
 
-def fetch_market_data(df_positions: pd.DataFrame):
+def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
     """
         df_positions[['instrument','quantity']]
     """
@@ -291,7 +291,7 @@ def fetch_market_data(df_positions: pd.DataFrame):
     df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
     df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
     # Calculate time to expiry
-    valuation_day = pd.to_datetime('2024-08-05')
+    valuation_day = pd.to_datetime(valuation_day)
     df['time_to_expiry'] = (df['expiry'] - valuation_day).dt.days / 365
     # convert expiry to a string
     df['expiry'] = df['expiry'].dt.strftime('%Y-%m-%d')
