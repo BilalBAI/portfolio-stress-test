@@ -1,9 +1,6 @@
 {
     "external_data_requirements": {
         "instrument": "Instrument name, e.g. BTC-25OCT24-50000-P",
-        "quantity": "number of contracts holding",
-        "spot": "underlying spot price at the valuation time",
-        "ivol": "implied volatility at the valuation time",
-        "atm_ivol": "At the money implied volatility for each expiry"
+        "quantity": "number of contracts holding"
     }
 }
