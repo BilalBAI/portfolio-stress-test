@@ -1,22 +1,42 @@
 {
-    "scenario_1": {
+    "Fear Avalanche": {
         "spot_shock": {
-            "BTC": 0.1,
-            "ETH": 0.2
+            "BTC": -0.25,
+            "ETH": -0.3
         },
         "vol_shock": {
-            "BTC": 0,
-            "ETH": 0
+            "BTC": 1,
+            "ETH": 1
         }
     },
-    "scenario_2": {
+    "Bullish Frenzy": {
         "spot_shock": {
-            "BTC": 0.15,
-            "ETH": 0.25
+            "BTC": 0.25,
+            "ETH": 0.3
         },
         "vol_shock": {
-            "BTC": 0,
-            "ETH": 0
+            "BTC": 0.3,
+            "ETH": 0.3
+        }
+    },
+    "Bullish Calm": {
+        "spot_shock": {
+            "BTC": 0.1,
+            "ETH": 0.15
+        },
+        "vol_shock": {
+            "BTC": -0.1,
+            "ETH": -0.15
+        }
+    },
+    "Bearish Fade": {
+        "spot_shock": {
+            "BTC": -0.1,
+            "ETH": -0.15
+        },
+        "vol_shock": {
+            "BTC": -0.1,
+            "ETH": -0.1
         }
     }
 }
