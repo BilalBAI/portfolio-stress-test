@@ -38,5 +38,25 @@
             "BTC": -0.1,
             "ETH": -0.1
         }
+    },
+    "BTC Leads": {
+        "spot_shock": {
+            "BTC": 0.1,
+            "ETH": 0.03
+        },
+        "vol_shock": {
+            "BTC": 0.1,
+            "ETH": 0.1
+        }
+    },
+    "ETH Leads": {
+        "spot_shock": {
+            "BTC": 0.01,
+            "ETH": 0.1
+        },
+        "vol_shock": {
+            "BTC": 0.1,
+            "ETH": 0.1
+        }
     }
 }

@@ -11,6 +11,10 @@ GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 class StressTest:
     '''
         Basic Spot and Vol Stress Test
+        The spot shock for Options uses the "sticky strike" rule.
+            sticky strike: if spot changes, the implied volatility of an option with a given absolute strike does not change.
+            sticky moneyness/sticky delta: if spot changes, the implied volatility of an option with a given moneyness does not change
+
     '''
 
     def shock_df(self, data: DataFrame, name):
