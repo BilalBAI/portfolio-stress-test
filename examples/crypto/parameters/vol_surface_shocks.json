@@ -15,7 +15,7 @@
       "class_": "ETH"
     }
   ],
-  "Concentration-Shocks": [
+  "Parallel-Shocks": [
     {
       "Class": "BTC",
       "alpha_r": 0.25,

@@ -22,8 +22,8 @@ class VolSurfaceParameters:
     def config_bid_ask(self, class_):
         return self._search('BidAsk', class_)
 
-    def config_concentration(self, class_):
-        c1 = self._search('Concentration-Shocks', class_)
+    def config_parallel(self, class_):
+        c1 = self._search('Parallel-Shocks', class_)
         c2 = self._search('Vega-Threshold', class_)
         return {**c1, **c2}
 
@@ -72,8 +72,8 @@ class OptParameters:
     def config_bid_ask(self, region, class_):
         return self._search('BidAsk', region, class_)
 
-    def config_concentration(self, region, class_):
-        c1 = self._search('Concentration-Shocks', region, class_)
+    def config_parallel(self, region, class_):
+        c1 = self._search('Parallel-Shocks', region, class_)
         c2 = self._search('Vega-Threshold', region, class_)
         return {**c1, **c2}
 

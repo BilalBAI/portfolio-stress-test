@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 
-class Concentration:
+class Parallel:
     """
     Parallel/Concentration shock
     """
@@ -29,7 +29,7 @@ class Concentration:
         self.valuation_date: date = date.today() if valuation_date is None else valuation_date
 
     def __add__(self, other):
-        self.charge_array = np.append(self.charge_array, other.concentration_charge)
+        self.charge_array = np.append(self.charge_array, other.parallel_charge)
         return self
 
     def _calc_vega90days(self):
@@ -74,8 +74,8 @@ class Concentration:
             w = self.atm_ivol_3m - min_vol
         elif w + self.atm_ivol_3m > max_vol:
             w = max_vol - self.atm_ivol_3m
-        self.concentration_charge = -abs(self.vega90d * (w / 2))
-        self.charge_array = np.append(self.charge_array, self.concentration_charge)
+        self.parallel_charge = -abs(self.vega90d * (w / 2))
+        self.charge_array = np.append(self.charge_array, self.parallel_charge)
 
     def aggregrate(self):
         self.aggregate()

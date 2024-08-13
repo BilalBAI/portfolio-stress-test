@@ -4,7 +4,7 @@
         "vol_shock": "vol = vol * (1 + vol_shock)"
     },
     "vol_surface_shocks": {
-        "Concentration-Shocks": [
+        "Parallel-Shocks": [
             {
                 "Class": "class name, e.g. BTC",
                 "alpha_r": 0.25,

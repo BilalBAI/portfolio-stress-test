@@ -171,7 +171,7 @@
       "Factor": 0.96
     }
   ],
-  "Asia-Concentration-Shocks": [
+  "Asia-Parallel-Shocks": [
     {
       "Class": "I1",
       "alpha_r": 0.25,
@@ -788,7 +788,7 @@
       "3y": 136250
     }
   ],
-  "EU-Concentration-Shocks": [
+  "EU-Parallel-Shocks": [
     {
       "Class": "I1",
       "alpha_r": 0.25,
@@ -1195,7 +1195,7 @@
       "2y": 5000
     }
   ],
-  "US-Concentration-Shocks": [
+  "US-Parallel-Shocks": [
     {
       "Class": "I1",
       "alpha_r": 0.25,

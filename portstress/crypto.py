@@ -9,7 +9,7 @@ import numpy as np
 from .core.utils import CryptoParameters, VolSurfaceParameters
 from .core.black_scholes import calc_delta, calc_vega, BS_PARAMETERS
 from .core.spot_vol_stress import StressTest
-from .core.vol_surface_stress import Concentration, TermStructure, Skew, BidAsk
+from .core.vol_surface_stress import Parallel, TermStructure, Skew, BidAsk
 from .clients.deribit import DeribitClient
 
 
@@ -78,7 +78,7 @@ class CryptoSpotVolShocks:
 
     # def run(self):
     #     """
-    #     Attributes Created: rv_summary, .macro_summary, .sector_summary, .concentration_summary, .equity_liq_summary,
+    #     Attributes Created: rv_summary, .macro_summary, .sector_summary, .parallel_summary, .equity_liq_summary,
     #                         .equity_risk_summary
     #     """
     #     if self.data.empty or self.symbol_level_data.empty:
@@ -91,7 +91,7 @@ class CryptoSpotVolShocks:
     #     self.delta_liq_loss = df_liq['Liq Charge'].sum()
 
     #     self.total_loss = min(
-    #         self.rv_loss, self.macro_loss, self.sector_loss, self.concentration_loss
+    #         self.rv_loss, self.macro_loss, self.sector_loss, self.parallel_loss
     #     ) + self.delta_liq_loss
     #     self.summary_info()
     #     return 'Success'
@@ -104,7 +104,7 @@ class CryptoSpotVolShocks:
     #     print(f'RV Summary: {self.rv_loss:,.0f}')
     #     print(f'Macro Summary: {self.macro_loss:,.0f}')
     #     print(f'Sector Summary: {self.sector_loss:,.0f}')
-    #     print(f'Concentration Summary: {self.concentration_loss:,.0f}\n')
+    #     print(f'Parallel Summary: {self.parallel_loss:,.0f}\n')
     #     print('Liquidity Summary:')
     #     print(f'Delta Liq Summary: {self.delta_liq_loss:,.0f}')
     #     print('---------------------------------\n')
@@ -144,7 +144,7 @@ class CryptoVolSurfaceShocks:
         # Run Stress tests
         results = []
         liq_b = BidAsk()
-        liq_c = Concentration()
+        liq_c = Parallel()
         liq_t = TermStructure()
         liq_s = Skew()
         for p in self.products:
@@ -165,7 +165,7 @@ class CryptoVolSurfaceShocks:
                 [
                     {
                         'product': 'Sum',
-                        'measure': 'Concentration',
+                        'measure': 'Parallel',
                         'value': liq_c.final_charge
                     }, {
                         'product': 'Sum',
@@ -214,7 +214,7 @@ class CryptoVolSurfaceShocks:
     ):
         df = data[data['underlying'].isin(underlying)].copy()
         if df.empty:
-            return {}, BidAsk(), Concentration(), TermStructure(), Skew()
+            return {}, BidAsk(), Parallel(), TermStructure(), Skew()
 
         # Get atm_ivol_3m if the data include all experies.
         exp_3m_date = date.today() if valuation_date is None else valuation_date
@@ -226,8 +226,8 @@ class CryptoVolSurfaceShocks:
         # atm_ivol_3m = df['atm_ivol_3m'].values[0]
         # Run models
         b = BidAsk(df, self.parameters.config_bid_ask(class_), valuation_date)
-        c = Concentration(
-            df, atm_ivol_3m, self.parameters.config_concentration(class_), days_to_trade, valuation_date
+        c = Parallel(
+            df, atm_ivol_3m, self.parameters.config_parallel(class_), days_to_trade, valuation_date
         )
         t = TermStructure(df, self.parameters.config_term_structure(class_), days_to_trade, valuation_date)
         s = Skew(df, self.parameters.config_skew(class_), days_to_trade, valuation_date)
@@ -239,8 +239,8 @@ class CryptoVolSurfaceShocks:
         re = [
             {
                 'product': product,
-                'measure': 'Concentration',
-                'value': c.concentration_charge
+                'measure': 'Parallel',
+                'value': c.parallel_charge
             }, {
                 'product': product,
                 'measure': 'TermStructure',
@@ -262,7 +262,7 @@ class CryptoVolSurfaceShocks:
                     }, {
                         'product': product,
                         'measure': 'Sum',
-                        'value': b.bid_ask_charge + c.concentration_charge + t.term_charge + s.skew_charge
+                        'value': b.bid_ask_charge + c.parallel_charge + t.term_charge + s.skew_charge
                     }
                 ]
             )
@@ -272,7 +272,7 @@ class CryptoVolSurfaceShocks:
                     {
                         'product': product,
                         'measure': 'Sum',
-                        'value': c.concentration_charge + t.term_charge + s.skew_charge
+                        'value': c.parallel_charge + t.term_charge + s.skew_charge
                     }
                 ]
             )
