@@ -289,6 +289,7 @@ def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
     df['strike'] = df['strike'].astype(float)
     df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
     df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
+    df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
     df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
     # Calculate time to expiry
     valuation_day = pd.to_datetime(valuation_day)

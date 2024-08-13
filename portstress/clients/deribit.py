@@ -40,23 +40,19 @@ class DeribitClient:
 
     def get_order_book(self, instruments, depth=1, attributes=ATTRIBUTES):
         url = f'{self.base_url}/get_order_book'
-        data = {}
+        data = {attribute: [] for attribute in attributes}
         for instrument in instruments:
             r = requests.get(url, params={'depth': depth,
                                           'instrument_name': instrument})
-            c = r.json()['result']
+            try:
+                c = r.json()['result']
+            except:
+                print(f"Instrument Name: {instrument} Not Found")
+                continue
             for attribute in attributes:
-                if attribute == 'greeks':
-                    for greek in c[attribute].keys():
-                        if greek not in data.keys():
-                            data[greek] = [c[attribute][greek]]
-                        else:
-                            data[greek].append(c[attribute][greek])
-                else:
-                    if attribute not in data.keys():
-                        data[attribute] = [c[attribute]]
-                    else:
-                        data[attribute].append(c[attribute])
+                if attribute not in c.keys():
+                    c[attribute] = None
+                data[attribute].append(c[attribute])
         data = pd.DataFrame(data)
         return data
 
