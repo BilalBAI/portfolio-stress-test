@@ -320,3 +320,26 @@ def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
     df_atm = db_client.get_atm_ivol()
     df = pd.merge(df, df_atm, on='underlying-expiry', how='left')
     return df
+
+
+def process_instruments(df: pd.DataFrame, valuation_day: str):
+    """
+        input: df[['instrument', ......]]
+            instrument example: BTC-25OCT24-84000-C
+        output: df[['instrument', 'underlying-expiry', 'underlying', 
+            'expiry', 'strike', 'put_call', 'time_to_expiry', ......]]
+    """
+    # Splitting the 'instrument' column by "-"
+    df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
+    df['strike'] = df['strike'].astype(float)
+    df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
+    df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
+    df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
+    df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
+    # Calculate time to expiry
+    valuation_day = pd.to_datetime(valuation_day)
+    df['time_to_expiry'] = (df['expiry'] - valuation_day).dt.days / 365
+    # convert expiry to a string
+    df['expiry'] = df['expiry'].dt.strftime('%Y-%m-%d')
+
+    return df
