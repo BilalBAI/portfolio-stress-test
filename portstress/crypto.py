@@ -128,15 +128,20 @@ class CryptoVolSurfaceShocks:
         # Calc delta and position_delta
         # Position Delta($) = Delta × Number of Contracts × Shares per Contract × Price of the Underlying Asset
         data['delta'] = np.vectorize(
-            lambda spot, **BS_PARAMETERS: calc_delta(spot=spot, **BS_PARAMETERS) if spot > 0 else 0
+            lambda spot, **BS_PARAMETERS: float(calc_delta(spot=spot, **BS_PARAMETERS)) if spot > 0 else 0
         )(**{col: data[col] for col in BS_PARAMETERS})
         data['position_delta'] = data['delta'] * data['quantity'] * data[
             'multiplier'] * data['spot']
+        '''
+        When using np.vectorize, the return type is determined by the first output.
+        If the first output is an integer, the entire output might be cast to integers, even if subsequent outputs should be floats.
+        To ensure that the delta values are stored as floats, need explicitly convert the result to a float: float(calc_delta(spot=spot, **BS_PARAMETERS)
+        '''
 
         # Calc vega and position_vega
         # Position Vega($) = Vega × ΔIV × Number of Contracts × Shares per Contract
         data['vega'] = np.vectorize(
-            lambda spot, **BS_PARAMETERS: calc_vega(spot=spot, **BS_PARAMETERS) if spot > 0 else 0
+            lambda spot, **BS_PARAMETERS: float(calc_vega(spot=spot, **BS_PARAMETERS)) if spot > 0 else 0
         )(**{col: data[col] for col in BS_PARAMETERS})
         data['position_vega'] = data['vega'] * data['quantity'] * data[
             'multiplier']
@@ -307,7 +312,8 @@ def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
     df['multiplier'] = 1
     df['rate'] = 0.03
     df['vol'] = df['mark_iv'] / 100
-    df['spot'] = df['index_price'].values[0]
+    df['spot'] = df['underlying_price']
+    df['spot'] = df['spot'].fillna(df['index_price'])
     # df['position_vega'] = df['vega'] * df['quantity']
 
     # calculate atm_ivol
