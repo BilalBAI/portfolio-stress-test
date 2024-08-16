@@ -333,9 +333,11 @@ def process_instruments(df: pd.DataFrame, valuation_day: str):
     df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
     df['strike'] = df['strike'].astype(float)
     df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
-    df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
     df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
-    df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
+    df['expiry'] = pd.to_datetime(df['expiry'], format='mixed')
+    df['underlying-expiry'] = df['underlying'] + "-" + df['expiry'].dt.strftime('%-d%b%y')
+    # e.g. BTC-8NOV24, use the %-d to avoid zero-padding
+    df['underlying-expiry'] = df['underlying-expiry'].apply(lambda x: x.upper() if isinstance(x, str) else x)
     # Calculate time to expiry
     valuation_day = pd.to_datetime(valuation_day)
     df['time_to_expiry'] = (df['expiry'] - valuation_day).dt.days / 365
