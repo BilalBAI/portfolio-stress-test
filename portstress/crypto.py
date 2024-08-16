@@ -322,6 +322,23 @@ def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
     return df
 
 
+# Function to convert the dates to 'yyyy-mm-dd'
+
+
+def parse_date(date_str):
+    if date_str is None:
+        return None  # Return None if the input is None
+    try:
+        if any(c.isalpha() for c in date_str):  # Check if there are any letters in the string
+            # Parse dates like '6AUG24' or '16AUG24'
+            return datetime.strptime(date_str, '%d%b%y').strftime('%Y-%m-%d')
+        else:
+            # Parse dates like '241207'
+            return datetime.strptime(date_str, '%y%m%d').strftime('%Y-%m-%d')
+    except ValueError:
+        return None  # Handle any parsing errors
+
+
 def process_instruments(df: pd.DataFrame, valuation_day: str):
     """
         input: df[['instrument', ......]]
@@ -333,8 +350,9 @@ def process_instruments(df: pd.DataFrame, valuation_day: str):
     df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
     df['strike'] = df['strike'].astype(float)
     df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
-    df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
-    df['expiry'] = pd.to_datetime(df['expiry'], format='mixed')
+    # df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
+    df['expiry'] = df['expiry'].apply(parse_date)
+    df['expiry'] = pd.to_datetime(df['expiry'], format='%Y-%m-%d')
     df['underlying-expiry'] = df['underlying'] + "-" + df['expiry'].dt.strftime('%-d%b%y')
     # e.g. BTC-8NOV24, use the %-d to avoid zero-padding
     df['underlying-expiry'] = df['underlying-expiry'].apply(lambda x: x.upper() if isinstance(x, str) else x)
