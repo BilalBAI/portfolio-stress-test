@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 from scipy.stats import norm
+import numpy as np
+import pandas as pd
 
 BS_PARAMETERS = DELTA_PARAMETERS = ['strike', 'time_to_expiry', 'spot', 'rate', 'vol', 'put_call', 'cost_of_carry_rate']
 GAMMA_PARAMETERS = VEGA_PARAMETERS = ['strike', 'time_to_expiry', 'spot', 'rate', 'vol', 'cost_of_carry_rate']
@@ -54,7 +56,7 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
         b = r
     else:
         b = cost_of_carry_rate
-    # Run BS pricing for put and call, if not an option (not a put nor a call), return spot 
+    # Run BS pricing for put and call, if not an option (not a put nor a call), return spot
     if put_call in ['put', 'call', 'p', 'c']:
         d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
         d2 = d1 - vol * time_to_expiry**0.5
@@ -94,7 +96,7 @@ def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_r
     # return 0 if not an option type
     if put_call not in ['put', 'call', 'p', 'c']:
         return 0
-    
+
     r = rate
     # Price Expired Option and 0 vol as 0
     if (time_to_expiry <= 0) or (vol == 0):
@@ -115,7 +117,7 @@ def calc_gamma(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
     # return 0 if not an option type
     if put_call not in ['put', 'call', 'p', 'c']:
         return 0
-    
+
     r = rate
     if cost_of_carry_rate == 'default':
         b = r
@@ -125,3 +127,38 @@ def calc_gamma(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
     discount_factor = math.exp(-(r - b) * time_to_expiry)
     gamma = (norm.pdf(d1) * discount_factor) / (spot * vol * time_to_expiry**0.5)
     return gamma
+
+
+def calc_delta_df(df: pd.DataFrame):
+    # Calc delta and position_delta for a portfolio in a DataFrame format
+    # Position Delta = Delta × Number of Contracts × Shares per Contract
+    # Position Delta($) = Delta × Number of Contracts × Shares per Contract × Price of the Underlying Asset
+    '''
+        When using np.vectorize, the return type is determined by the first output.
+        If the first output is an integer, the entire output might be cast to integers, even if subsequent outputs should be floats.
+        To ensure that the delta values are stored as floats, need explicitly convert the result to a float: float(calc_delta(spot=spot, **BS_PARAMETERS)
+    '''
+    df['delta'] = np.vectorize(
+        lambda spot, **BS_PARAMETERS: float(calc_delta(spot=spot, **BS_PARAMETERS)) if spot > 0 else 0
+    )(**{col: df[col] for col in BS_PARAMETERS})
+    df['position_delta'] = df['delta'] * df['quantity'] * df[
+        'multiplier']
+    df['dollar_position_delta'] = df['delta'] * df['quantity'] * df[
+        'multiplier'] * df['spot']
+    return df
+
+
+def calc_vega_df(df: pd.DataFrame):
+    # Calc vega and position_vega for a portfolio in a DataFrame format
+    # Position Vega($) = Vega × ΔIV × Number of Contracts × Shares per Contract
+    '''
+        When using np.vectorize, the return type is determined by the first output.
+        If the first output is an integer, the entire output might be cast to integers, even if subsequent outputs should be floats.
+        To ensure that the delta values are stored as floats, need explicitly convert the result to a float: float(calc_delta(spot=spot, **BS_PARAMETERS)
+    '''
+    df['vega'] = np.vectorize(
+        lambda spot, **BS_PARAMETERS: float(calc_vega(spot=spot, **BS_PARAMETERS)) if spot > 0 else 0
+    )(**{col: df[col] for col in BS_PARAMETERS})
+    df['position_vega'] = df['vega'] * df['quantity'] * df[
+        'multiplier']
+    return df
