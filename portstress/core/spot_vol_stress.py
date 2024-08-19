@@ -3,7 +3,7 @@ import pandas as pd
 from pandas import DataFrame
 from .black_scholes import bs_pricing, BS_PARAMETERS
 
-COLUMNS = ['spot_shock', 'vol_shock', 'quantity', 'multiplier'] + BS_PARAMETERS
+COLUMNS = ['spot_shock', 'vol_shock', 'vol_shock_mode', 'quantity', 'multiplier'] + BS_PARAMETERS
 
 GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 
@@ -26,8 +26,14 @@ class StressTest:
     @staticmethod
     def shock(
         spot_shock, vol_shock, spot, quantity, multiplier, vol, strike, put_call, time_to_expiry, rate,
-        cost_of_carry_rate, **kwargs
+        cost_of_carry_rate, vol_shock_mode: str = 'relative', **kwargs
     ):
+        '''
+        vol_shock_mode:
+            relative: vol = vol * (1 + vol_shock); 
+            absolute: vol = vol + vol_shock;
+        '''
+        # Pre shock valuation
         pre_shock = bs_pricing(
             strike=strike,
             time_to_expiry=time_to_expiry,
@@ -37,12 +43,19 @@ class StressTest:
             put_call=put_call,
             cost_of_carry_rate=cost_of_carry_rate
         )
+        # Calculate post shock spot and vol
+        if vol_shock_mode == 'absolute':
+            post_shock_vol = vol + vol_shock
+        else:
+            post_shock_vol = vol * (1 + vol_shock)
+        post_shock_spot = spot * (1 + spot_shock)
+        # Post shock valuation
         post_shock = bs_pricing(
             strike=strike,
             time_to_expiry=time_to_expiry,
-            spot=spot * (1 + spot_shock),
+            spot=post_shock_spot,
             rate=rate,
-            vol=vol * (1 + vol_shock),
+            vol=post_shock_vol,
             put_call=put_call,
             cost_of_carry_rate=cost_of_carry_rate
         )

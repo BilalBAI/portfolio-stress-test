@@ -31,6 +31,7 @@ class CryptoSpotVolShocks:
         for k in shocks.keys():
             data['spot_shock'] = data['underlying'].map(shocks[k]['spot_shock'])
             data['vol_shock'] = data['underlying'].map(shocks[k]['vol_shock'])
+            data['vol_shock_mode'] = shocks[k]['vol_shock_mode']
             data = st.shock_df(data, f"{k}")
             st_columns.append(f"{k}")
         return data, st_columns
