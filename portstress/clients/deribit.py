@@ -56,9 +56,43 @@ class DeribitClient:
         data = pd.DataFrame(data)
         return data
 
-    # get at the money implied vol for each expiry
+    def get_all_strike_expiry(self, coins: list = ['BTC', 'ETH']):
+        '''
+            get ivol for all strikes and expires for option chains in coins
+        '''
+        all_instruments = self.get_instruments(coins=coins)
+        all_instruments = [i for i in all_instruments if '-P' not in i]  # call options only
+        all_index_prices = self.get_index_price()
+        df = self.get_order_book(all_instruments, attributes=['instrument_name', 'mark_iv'])
+        df = df.rename(columns={'instrument_name': 'instrument', 'mark_iv': 'ivol'})
+        df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
+        df['strike'] = df['strike'].astype(float)
+        df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
+        df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
+        df['timestamp_ivol'] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
+        df['index_price'] = df['underlying'].map(all_index_prices)
+        # filter out at the money ivol
+        atm_strike_map = []
+        for u in df['underlying'].unique().tolist():
+            # atm_strike_map[u] = []
+            tem = df[df['underlying'].isin([u])].copy().reset_index(drop=True)
+            for e in tem['expiry'].unique().tolist():
+                tem_ex = tem[tem['expiry'] == e].copy().reset_index(drop=True)
+                # Find the closest value in column strike to the spot
+                atm_strike = tem_ex['strike'].iloc[(tem_ex['strike'] - all_index_prices[u]).abs().argsort()[0]]
+                # Retrieve the corresponding value from column vol
+                atm_strike_map.append(f"{u}-{str(e)[0:10]}-{int(atm_strike)}-C")
+        df_atm = df[df['instrument'].isin(atm_strike_map)].reset_index(drop=True)
+        df_atm['atm_ivol'] = df_atm['ivol']
+        df_atm['atm_strike'] = df_atm['strike']
+        df_atm = df_atm[['underlying-expiry', 'atm_strike', 'index_price', 'atm_ivol', 'timestamp_ivol']]
+
+        return df, df_atm
 
     def get_atm_ivol(self, coins: list = ['BTC', 'ETH']):
+        '''
+            get at the money implied vol for each expiry
+        '''
         all_instruments = self.get_instruments(coins=coins)
         df_all_instruments = pd.DataFrame({'instrument': all_instruments})
         df_all_instruments[['underlying', 'expiry', 'strike', 'put_call']
