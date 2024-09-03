@@ -1,114 +1,14 @@
 [
     {
         "instrument": "BTC-25OCT24-50000-P",
-        "quantity": -25.0
+        "quantity": -100
     },
     {
         "instrument": "BTC-25OCT24-84000-C",
-        "quantity": 0.0
+        "quantity": 100
     },
     {
         "instrument": "BTC-27DEC24-105000-C",
-        "quantity": -8.8
-    },
-    {
-        "instrument": "BTC-27DEC24-110000-C",
-        "quantity": -28.9
-    },
-    {
-        "instrument": "BTC-27DEC24-115000-C",
-        "quantity": -1.7
-    },
-    {
-        "instrument": "BTC-27DEC24-120000-C",
-        "quantity": 95.0
-    },
-    {
-        "instrument": "BTC-27DEC24-43000-P",
-        "quantity": 31.4
-    },
-    {
-        "instrument": "BTC-27DEC24-44000-P",
-        "quantity": 20.6
-    },
-    {
-        "instrument": "BTC-27DEC24-45000-P",
-        "quantity": 14.0
-    },
-    {
-        "instrument": "BTC-27DEC24-47000-P",
-        "quantity": -9.0
-    },
-    {
-        "instrument": "BTC-27DEC24-48000-P",
-        "quantity": -9.2
-    },
-    {
-        "instrument": "BTC-27DEC24-49000-P",
-        "quantity": -25.0
-    },
-    {
-        "instrument": "BTC-27DEC24-52000-P",
-        "quantity": -18.7
-    },
-    {
-        "instrument": "BTC-27DEC24-53000-P",
-        "quantity": -4.2
-    },
-    {
-        "instrument": "BTC-27DEC24-90000-C",
-        "quantity": -50.0
-    },
-    {
-        "instrument": "BTC-27SEP24-47000-P",
-        "quantity": 30.0
-    },
-    {
-        "instrument": "BTC-27SEP24-48000-P",
-        "quantity": 18.6
-    },
-    {
-        "instrument": "BTC-27SEP24-49000-P",
-        "quantity": 79.6
-    },
-    {
-        "instrument": "BTC-27SEP24-50000-P",
-        "quantity": 37.1
-    },
-    {
-        "instrument": "BTC-27SEP24-80000-C",
-        "quantity": 201.2
-    },
-    {
-        "instrument": "BTC-27SEP24-85000-C",
-        "quantity": 72.4
-    },
-    {
-        "instrument": "BTC-27SEP24-90000-C",
-        "quantity": 50.0
-    },
-    {
-        "instrument": "BTC-28MAR25-120000-C",
-        "quantity": -209.2
-    },
-    {
-        "instrument": "BTC-28MAR25-130000-C",
-        "quantity": -154.3
-    },
-    {
-        "instrument": "BTC-28MAR25-140000-C",
-        "quantity": -105.6
-    },
-    {
-        "instrument": "BTC-28MAR25-150000-C",
-        "quantity": -67.5
-    },
-    {
-        "instrument": "BTC-30AUG24-75000-C",
-        "quantity": 12.0
-    },
-    {
-        "instrument": "BTC-30AUG24-82000-C",
-        "quantity": 12.0
+        "quantity": -200
     }
 ]
