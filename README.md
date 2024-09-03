@@ -11,7 +11,12 @@ Run the following to create a portstress conda environment:
 ```bash
 conda create -n portstress python=3.12 pip wheel
 conda activate portstress
+
+# Download and install package
 python -m pip install -e .
+# Install directly
+pip install git+https://github.com/BilalBAI/portfolio-stress-test.git
+
 ```
 
 Run the following to create a portstress venv:
@@ -30,8 +35,10 @@ source portstress_env/bin/activate
 # Verify the Python version
 python --version
 
-# Install dependencies
+# Download and install package
 python -m pip install -e .
+# Install directly
+pip install git+https://github.com/BilalBAI/portfolio-stress-test.git
 
 # Deactivate the virtual environment when done
 deactivate
@@ -57,7 +64,7 @@ Bloomberg API access is required for equity stress test.
 portfolio-stress-test/
 │
 ├── examples/
-│   └── example_usage.py
+│   └── example_usage
 ├── portstress/
 │   ├── core/
 │       ├── black_scholes.py
