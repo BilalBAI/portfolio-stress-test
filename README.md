@@ -2,8 +2,6 @@
 
 PortStress is a Python-based stress testing tool designed to evaluate portfolio risk under various stress scenarios. It leverages the Bloomberg API for data retrieval and offers a modular structure for customizable and flexible usage.
 
-[High-level Framework Introduction](https://docs.google.com/document/d/1AtpFLNE6FaWGK_ipJyhvnKF6hI-dhDRQBLVtB7vZpWI/edit?usp=sharing)
-
 ## Installation
 
 Run the following to create a portstress conda environment:
@@ -14,7 +12,7 @@ conda activate portstress
 
 # Download and install package
 python -m pip install -e .
-# Install directly
+# Or install directly
 pip install git+https://github.com/BilalBAI/portfolio-stress-test.git
 
 ```
@@ -37,7 +35,7 @@ python --version
 
 # Download and install package
 python -m pip install -e .
-# Install directly
+# Or install directly
 pip install git+https://github.com/BilalBAI/portfolio-stress-test.git
 
 # Deactivate the virtual environment when done
