@@ -7,14 +7,52 @@ COLUMNS = ['spot_shock', 'vol_shock', 'vol_shock_mode', 'quantity', 'multiplier'
 
 GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 
+class StressTest2:
+    '''
+        Basic Spot and Vol Stress Test
+        sticky strike: if spot changes, the implied volatility of an option with a given absolute strike does not change.
+        sticky moneyness/sticky delta: if spot changes, the implied volatility of an option with a given moneyness does not change
+
+    '''
+
+    def shock_df(self, data: DataFrame, name):
+        if not set(COLUMNS).issubset(set(data.columns)):
+            raise Exception(f'Input data should include columns: {COLUMNS}')
+        data[name] = np.vectorize(self.shock)(**{col: data[col] for col in COLUMNS})
+        return data
+
+    @staticmethod
+    def shock(
+        post_shock_spot, post_shock_vol, spot, vol, quantity, multiplier, strike, put_call, time_to_expiry, rate,
+        cost_of_carry_rate, **kwargs
+    ):
+        # Pre shock valuation
+        pre_shock = bs_pricing(
+            strike=strike,
+            time_to_expiry=time_to_expiry,
+            spot=spot,
+            rate=rate,
+            vol=vol,
+            put_call=put_call,
+            cost_of_carry_rate=cost_of_carry_rate
+        )
+
+        # Post shock valuation
+        post_shock = bs_pricing(
+            strike=strike,
+            time_to_expiry=time_to_expiry,
+            spot=post_shock_spot,
+            rate=rate,
+            vol=post_shock_vol,
+            put_call=put_call,
+            cost_of_carry_rate=cost_of_carry_rate
+        )
+        return (post_shock - pre_shock) * quantity * multiplier
 
 class StressTest:
     '''
         Basic Spot and Vol Stress Test
-        The spot shock for Options uses the "sticky strike" rule.
-            sticky strike: if spot changes, the implied volatility of an option with a given absolute strike does not change.
-            sticky moneyness/sticky delta: if spot changes, the implied volatility of an option with a given moneyness does not change
-
+        This class only supports the "sticky strike" rule.
     '''
 
     def shock_df(self, data: DataFrame, name):
