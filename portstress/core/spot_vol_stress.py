@@ -4,6 +4,8 @@ from pandas import DataFrame
 from .black_scholes import bs_pricing, BS_PARAMETERS
 
 COLUMNS = ['spot_shock', 'vol_shock', 'vol_shock_mode', 'quantity', 'multiplier'] + BS_PARAMETERS
+COLUMNS2 = ['post_shock_spot', 'post_shock_vol', 'quantity', 'multiplier'] + BS_PARAMETERS
+
 
 GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 
@@ -17,8 +19,8 @@ class StressTest2:
 
     def shock_df(self, data: DataFrame, name):
         if not set(COLUMNS).issubset(set(data.columns)):
-            raise Exception(f'Input data should include columns: {COLUMNS}')
-        data[name] = np.vectorize(self.shock)(**{col: data[col] for col in COLUMNS})
+            raise Exception(f'Input data should include columns: {COLUMNS2}')
+        data[name] = np.vectorize(self.shock)(**{col: data[col] for col in COLUMNS2})
         return data
 
     @staticmethod
