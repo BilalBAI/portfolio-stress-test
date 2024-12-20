@@ -18,7 +18,7 @@ class StressTest2:
     '''
 
     def shock_df(self, data: DataFrame, name):
-        if not set(COLUMNS).issubset(set(data.columns)):
+        if not set(COLUMNS2).issubset(set(data.columns)):
             raise Exception(f'Input data should include columns: {COLUMNS2}')
         data[name] = np.vectorize(self.shock)(**{col: data[col] for col in COLUMNS2})
         return data
