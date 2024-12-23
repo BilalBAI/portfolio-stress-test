@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from scipy.optimize import brentq
 from scipy.stats import norm
 import numpy as np
 import pandas as pd
@@ -162,3 +163,26 @@ def calc_vega_df(df: pd.DataFrame):
     df['position_vega'] = df['vega'] * df['quantity'] * df[
         'multiplier']
     return df
+
+
+def calc_implied_volatility(spot, strike, time_to_expiry, rate, market_price, put_call='call'):
+    """
+    Calculate implied volatility for a European option (call or put) given the market price.
+    
+    spot : float : spot price of the underlying asset
+    strike : float : strike price of the option
+    time_to_expiry : float : time to expiry in years
+    rate : float : risk-free interest rate (annual)
+    market_price : float : market price of the option
+    put_call : str : type of option ('call' or 'put')
+    
+    Returns:
+    iv : float : implied volatility (annual)
+    """
+    # Define the objective function (difference between market price and model price)
+    def objective(vol):
+        return bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default') - market_price
+
+    # Use numerical solver to find implied volatility that results in the market price
+    iv = brentq(objective, 1e-6, 5)  # Bounded between 1e-6 and 5
+    return iv
