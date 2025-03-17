@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from pandas import DataFrame
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from blp.blp import BlpQuery, BlpParser
 
 STOCK_TYPE = ['Common Stock', 'REIT', 'Depositary Receipt', 'Preference']
@@ -66,7 +66,7 @@ class BloombergClient(BlpQuery):
                                             PRIMARY KEY (ticker, field)
                                         ) """
         with self.engine.connect() as con:
-            con.execute(sql_create_table)   # create DB/TABLE if not exists
+            con.execute(text(sql_create_table))   # create DB/TABLE if not exists
         self.data_points = 0
 
     def c_ref_static(self, tickers: list, fields: ty.Union[ty.List, str]):
