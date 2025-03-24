@@ -229,3 +229,5 @@ def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N = 25000):
             V = np.maximum(V, S_T - strike)
         elif put_call == "put":
             V = np.maximum(V, strike - S_T)
+            
+    return V[0]
