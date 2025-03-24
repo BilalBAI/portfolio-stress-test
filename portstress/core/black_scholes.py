@@ -186,3 +186,46 @@ def calc_implied_volatility(spot, strike, time_to_expiry, rate, market_price, pu
     # Use numerical solver to find implied volatility that results in the market price
     iv = brentq(objective, 1e-6, 5)  # Bounded between 1e-6 and 5
     return iv
+
+
+
+def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N = 25000):
+    '''
+    Binomial Tree Pricing for American Options
+
+    spot: spot stock price
+    strike: strike price
+    time_to_expiry: time to maturity in years
+    rate: risk free rate
+    vol: diffusion coefficient or volatility
+
+    N: number of periods or number of time steps
+    put_call: put or call
+
+    reference: https://github.com/cantaro86/Financial-Models-Numerical-Methods
+    
+    '''
+
+    dT = float(time_to_expiry) / N  # Delta t
+    u = np.exp(vol * np.sqrt(dT))  # up factor
+    d = 1.0 / u  # down factor
+
+    V = np.zeros(N + 1)  # initialize the price vector
+    S_T = np.array([(spot * u**j * d ** (N - j)) for j in range(N + 1)])  # price S_T at time T
+
+    a = np.exp(rate * dT)  # risk free compound return
+    p = (a - d) / (u - d)  # risk neutral up probability
+    q = 1.0 - p  # risk neutral down probability
+
+    if put_call == "call":
+        V[:] = np.maximum(S_T - strike, 0.0)
+    elif put_call == "put":
+        V[:] = np.maximum(strike - S_T, 0.0)
+
+    for i in range(N - 1, -1, -1):
+        V[:-1] = np.exp(-rate * dT) * (p * V[1:] + q * V[:-1])  # the price vector is overwritten at each step
+        S_T = S_T * u  # it is a tricky way to obtain the price at the previous time step
+        if put_call == "call":
+            V = np.maximum(V, S_T - strike)
+        elif put_call == "put":
+            V = np.maximum(V, strike - S_T)
