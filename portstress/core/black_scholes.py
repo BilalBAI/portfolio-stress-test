@@ -168,14 +168,14 @@ def calc_vega_df(df: pd.DataFrame):
 def calc_implied_volatility(spot, strike, time_to_expiry, rate, market_price, put_call='call'):
     """
     Calculate implied volatility for a European option (call or put) given the market price.
-    
+
     spot : float : spot price of the underlying asset
     strike : float : strike price of the option
     time_to_expiry : float : time to expiry in years
     rate : float : risk-free interest rate (annual)
     market_price : float : market price of the option
     put_call : str : type of option ('call' or 'put')
-    
+
     Returns:
     iv : float : implied volatility (annual)
     """
@@ -188,8 +188,48 @@ def calc_implied_volatility(spot, strike, time_to_expiry, rate, market_price, pu
     return iv
 
 
+def calc_prob_exe(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
+    '''
+    Calculate risk neutral probability of exercise
+    For calls: N(d2)
+    For puts: N(-d2)
 
-def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N = 25000):
+    Inputs Example:
+        strike = 450
+        t = date(year=2020,month=7,day=30)-date.today()
+        time_to_expiry = t.days/365
+        put_call = 'put'
+        vol = 0.3058
+        spot = 451.6
+        rate = 0.00893
+
+    '''
+    r = rate
+    # Price Expired Option and 0 vol with their intrinsic value
+    if ((time_to_expiry <= 0) or (vol == 0)) and (put_call == 'call'):
+        return min(0, spot - strike)
+    elif ((time_to_expiry <= 0) or (vol == 0)) and (put_call == 'put'):
+        return min(0, strike - spot)
+    # Reset underlying spot to a small number if it's 0 (The formula cannot take 0 underlying spot)
+    if spot == 0:
+        spot = 0.0000001
+    if cost_of_carry_rate == 'default':
+        b = r
+    else:
+        b = cost_of_carry_rate
+    # Calc N(d2) or N(-d2)
+    if put_call in ['put', 'call', 'p', 'c']:
+        d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
+        d2 = d1 - vol * time_to_expiry**0.5
+        if put_call in ['call', 'c']:
+            return norm.cdf(d2)
+        else:
+            return norm.cdf(-d2)
+    else:
+        return None
+
+
+def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N=25000):
     '''
     Binomial Tree Pricing for American Options
 
@@ -203,7 +243,7 @@ def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N = 25000):
     put_call: put or call
 
     reference: https://github.com/cantaro86/Financial-Models-Numerical-Methods
-    
+
     '''
 
     dT = float(time_to_expiry) / N  # Delta t
@@ -229,5 +269,5 @@ def bt_pricing(strike, time_to_expiry, spot, rate, vol, put_call, N = 25000):
             V = np.maximum(V, S_T - strike)
         elif put_call == "put":
             V = np.maximum(V, strike - S_T)
-            
+
     return V[0]
