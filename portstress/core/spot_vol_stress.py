@@ -9,7 +9,7 @@ COLUMNS2 = ['post_shock_spot', 'post_shock_vol', 'quantity', 'multiplier'] + BS_
 
 GLOBAL_SHOCK_EXCLUDE_G4_GAINS = False
 
- Image class StressTest2:
+class StressTest2:
     '''
         Basic Spot and Vol Stress Test
         sticky strike: if spot changes, the implied volatility of an option with a given absolute strike does not change.
