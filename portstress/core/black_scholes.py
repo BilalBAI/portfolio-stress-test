@@ -45,6 +45,10 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
 
     '''
     r = rate
+    # return spot for non-option type
+    if put_call not in ['put', 'call', 'p', 'c']:
+        # TODO: add futures pricing
+        return spot
     # Price Expired Option and 0 vol with their intrinsic value
     if ((time_to_expiry <= 0) or (vol == 0)) and (put_call == 'call'):
         return min(0, spot - strike)
@@ -57,18 +61,15 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
         b = r
     else:
         b = cost_of_carry_rate
-    # Run BS pricing for put and call, if not an option (not a put nor a call), return spot
-    if put_call in ['put', 'call', 'p', 'c']:
-        d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
-        d2 = d1 - vol * time_to_expiry**0.5
-        if put_call in ['call', 'c']:
-            return spot * math.exp(time_to_expiry *
-                                   (b - r)) * norm.cdf(d1) - strike * math.exp(-r * time_to_expiry) * norm.cdf(d2)
-        else:
-            return strike * math.exp(-r * time_to_expiry) * norm.cdf(-d2) - spot * math.exp(time_to_expiry *
-                                                                                            (b - r)) * norm.cdf(-d1)
+    # Run BS pricing for put and call
+    d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
+    d2 = d1 - vol * time_to_expiry**0.5
+    if put_call in ['call', 'c']:
+        return spot * math.exp(time_to_expiry *
+                               (b - r)) * norm.cdf(d1) - strike * math.exp(-r * time_to_expiry) * norm.cdf(d2)
     else:
-        return spot
+        return strike * math.exp(-r * time_to_expiry) * norm.cdf(-d2) - spot * math.exp(time_to_expiry *
+                                                                                        (b - r)) * norm.cdf(-d1)
 
 
 def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
