@@ -51,9 +51,9 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
         return spot
     # Price Expired Option and 0 vol with their intrinsic value
     if ((time_to_expiry <= 0) or (vol == 0)) and (put_call == 'call'):
-        return min(0, spot - strike)
+        return max(0, spot - strike)
     elif ((time_to_expiry <= 0) or (vol == 0)) and (put_call == 'put'):
-        return min(0, strike - spot)
+        return max(0, strike - spot)
     # Reset underlying spot to a small number if it's 0 (The formula cannot take 0 underlying spot)
     if spot == 0:
         spot = 0.0000001
