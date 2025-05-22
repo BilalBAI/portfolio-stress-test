@@ -92,6 +92,24 @@ def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
         return discount_factor * (norm.cdf(d1) - 1)
 
 
+def calc_gamma(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
+    # All else equal, gamma for a put is equal to gamma of a call
+    # Here, put_call is used to decide whether the position is an option
+    # return 0 if not an option type
+    if put_call not in ['put', 'call', 'p', 'c']:
+        return 0
+
+    r = rate
+    if cost_of_carry_rate == 'default':
+        b = r
+    else:
+        b = cost_of_carry_rate
+    d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
+    discount_factor = math.exp(-(r - b) * time_to_expiry)
+    gamma = (norm.pdf(d1) * discount_factor) / (spot * vol * time_to_expiry**0.5)
+    return gamma
+
+
 def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
     # All else equal, vega for a put is equal to vega of a call
     # Here, put_call is used to decide whether the position is an option
@@ -110,25 +128,33 @@ def calc_vega(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_r
     d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
     discount_factor = math.exp(-(r - b) * time_to_expiry)
     vega = spot * time_to_expiry**0.5 * norm.pdf(d1) * discount_factor
-    return vega / 100
+    return vega / 100  # Convert to per-1% vega
 
 
-def calc_gamma(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
-    # All else equal, gamma for a put is equal to gamma of a call
-    # Here, put_call is used to decide whether the position is an option
-    # return 0 if not an option type
+def calc_theta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
     if put_call not in ['put', 'call', 'p', 'c']:
+        return 0
+    if (time_to_expiry <= 0) or (vol == 0):
         return 0
 
     r = rate
-    if cost_of_carry_rate == 'default':
-        b = r
-    else:
-        b = cost_of_carry_rate
+    b = r if cost_of_carry_rate == 'default' else cost_of_carry_rate
+
     d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * time_to_expiry**0.5)
-    discount_factor = math.exp(-(r - b) * time_to_expiry)
-    gamma = (norm.pdf(d1) * discount_factor) / (spot * vol * time_to_expiry**0.5)
-    return gamma
+    d2 = d1 - vol * time_to_expiry**0.5
+
+    sqrt_T = time_to_expiry**0.5
+    term1 = -(spot * math.exp((b - r) * time_to_expiry) * norm.pdf(d1) * vol) / (2 * sqrt_T)
+
+    if put_call in ['call', 'c']:
+        term2 = -(b - r) * spot * math.exp((b - r) * time_to_expiry) * norm.cdf(d1)
+        term3 = -r * strike * math.exp(-r * time_to_expiry) * norm.cdf(d2)
+    else:
+        term2 = +(b - r) * spot * math.exp((b - r) * time_to_expiry) * norm.cdf(-d1)
+        term3 = +r * strike * math.exp(-r * time_to_expiry) * norm.cdf(-d2)
+
+    theta = term1 + term2 + term3
+    return theta / 365  # Convert to per-day theta
 
 
 def calc_delta_df(df: pd.DataFrame):
