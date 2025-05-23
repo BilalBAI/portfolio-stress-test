@@ -72,6 +72,126 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
                                                                                         (b - r)) * norm.cdf(-d1)
 
 
+def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default', normalized_greeks=False, trading_days=365):
+    """
+    Generalized Black-Scholes-Merton Option Greeks Calculator
+
+    Supports:
+    - Black-Scholes model for European stock options without dividends
+    - Merton's extension for options with continuous dividend yield
+    - Black's model for pricing European futures options
+    - Asay's margined futures option model
+    - Garman and Kohlhagen's model for European currency options
+
+    Inputs:
+        strike: Option strike price
+        time_to_expiry: Time to expiry in years
+        spot: Underlying asset price
+        rate: Risk-free interest rate
+        vol: Volatility (standard deviation of returns)
+        put_call: 'call', 'put', 'c', or 'p'
+        cost_of_carry_rate: Optional cost of carry (defaults to r)
+        normalized_greeks: Optional normalized_greeks (defaults to False)
+        trading_days: Optional trading_days (defaults to 365)
+
+    Returns:
+        Dictionary with Delta, Gamma, Vega (per 1% change), Theta (per day)
+    """
+
+    r = rate
+    if cost_of_carry_rate == 'default':
+        b = r
+    else:
+        b = cost_of_carry_rate
+
+    if put_call not in ['put', 'call', 'p', 'c']:
+        return {'delta': 1, 'gamma': 0, 'vega': 0, 'theta': 0}
+
+    if (time_to_expiry <= 0) or (vol == 0):
+        return {'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0}
+
+    sqrt_T = time_to_expiry ** 0.5
+    d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * sqrt_T)
+    d2 = d1 - vol * sqrt_T
+    discount_factor = math.exp(-(r - b) * time_to_expiry)
+
+    # Delta, USD per spot change
+    if put_call in ['call', 'c']:
+        delta = discount_factor * norm.cdf(d1)
+    else:
+        delta = discount_factor * (norm.cdf(d1) - 1)
+
+    # Gamma (same for put and call), USD per square of spot change
+    gamma = (norm.pdf(d1) * discount_factor) / (spot * vol * sqrt_T)
+
+    # Vega (same for put and call), USD per 100% vol change
+    vega = (spot * sqrt_T * norm.pdf(d1) * discount_factor)
+
+    # Theta, USD per year
+    term1 = -(spot * math.exp((b - r) * time_to_expiry) * norm.pdf(d1) * vol) / (2 * sqrt_T)
+    if put_call in ['call', 'c']:
+        term2 = -(b - r) * spot * math.exp((b - r) * time_to_expiry) * norm.cdf(d1)
+        term3 = -r * strike * math.exp(-r * time_to_expiry) * norm.cdf(d2)
+    else:
+        term2 = +(b - r) * spot * math.exp((b - r) * time_to_expiry) * norm.cdf(-d1)
+        term3 = +r * strike * math.exp(-r * time_to_expiry) * norm.cdf(-d2)
+
+    theta = (term1 + term2 + term3)
+
+    # Normalization
+    if normalized_greeks:
+        delta = delta * spot  # Delta USD
+        gamma = gamma * spot**2 / 100  # Gamma USD^2
+        vega = vega / 100  # Vega USD, per 1% change
+        theta = theta / trading_days  # Theta USD per day
+
+    return {
+        'delta': delta,
+        'gamma': gamma,
+        'vega': vega,
+        'theta': theta
+    }
+
+
+def calc_greeks_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds option Greeks (delta, gamma, vega, theta) to a DataFrame with option parameters.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing option inputs. Must include:
+            - strike
+            - time_to_expiry
+            - spot
+            - rate
+            - vol
+            - put_call
+            - (optional) cost_of_carry_rate
+
+    Returns:
+        pd.DataFrame: Original DataFrame with added Greek columns.
+    """
+    # Apply calc_greeks row-wise
+    df_greeks = df.apply(lambda row: calc_greeks(
+        strike=row['strike'],
+        time_to_expiry=row['time_to_expiry'],
+        spot=row['spot'],
+        rate=row['rate'],
+        vol=row['vol'],
+        put_call=row['put_call'],
+        cost_of_carry_rate=row.get('cost_of_carry_rate', 'default'),
+        normalized_greeks=row.get('normalized_greeks', False),
+        trading_days=row.get('trading_days', 365)
+    ), axis=1)
+
+    # Expand dictionary into columns
+    greeks_df = pd.json_normalize(df_greeks)
+
+    # Concatenate back to original DataFrame
+    df_final = pd.concat([df.reset_index(drop=True), greeks_df.reset_index(drop=True)], axis=1)
+
+    return df_final
+
+
 def calc_delta(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default'):
     r = rate
     # return 1 if not an option type
