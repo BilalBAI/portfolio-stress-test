@@ -77,11 +77,27 @@ def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry
     Generalized Black-Scholes-Merton Option Greeks Calculator
 
     Supports:
-    - Black-Scholes model for European stock options without dividends
-    - Merton's extension for options with continuous dividend yield
-    - Black's model for pricing European futures options
-    - Asay's margined futures option model
-    - Garman and Kohlhagen's model for European currency options
+
+    b=r  #default
+    Black-Scholes model for European stock options without dividends
+    - Black and Scholes (1973)
+
+    b=r−q
+    Merton's extension to the model for pricing European stock options with a continuous dividend yield q
+    - Merton (1973)
+
+    b=0
+    Black Fischer's extension for pricing European futures options
+    - Black (1976)
+
+    b = 0 and r = 0
+    The margined futures option model.
+    - Asay (1982)
+
+    b=r−rj
+    Model for pricing European currency options
+    - Garman and Kohlhagen (1983)
+
 
     Inputs:
         strike: Option strike price
@@ -95,7 +111,7 @@ def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry
         trading_days: Optional trading_days (defaults to 365)
 
     Returns:
-        Dictionary with Delta, Gamma, Vega (per 1% change), Theta (per day)
+        Dictionary with Delta, Gamma, Vega, Theta
     """
 
     r = rate
