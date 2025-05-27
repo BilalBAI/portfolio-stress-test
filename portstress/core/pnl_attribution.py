@@ -12,7 +12,7 @@ COLUMNS_PG = ['put_call', 'strike', 'rate', 'cost_of_carry_rate',
 
 def pnl_greeks_attribution(df: DataFrame, trading_days: int = 365):
     '''
-        Pnl Attribution between greeks. 
+        Pnl Attribution between greeks (Taylor's Expansion): 
         PnL ≈ Δ · ΔS
             + Vega · Δσ
             + Theta · Δt
@@ -27,7 +27,7 @@ def pnl_greeks_attribution(df: DataFrame, trading_days: int = 365):
     df['trading_days'] = trading_days
     df = calc_greeks_df(df, suffix='_T1')
     df = calc_greeks_df(df, suffix='_T2')
-    # calculate greeks pnl
+    # calculate greeks pnl (Taylor's Expansion)
     df['delta_pnl'] = df['delta_T1'] * (df['spot_T2'] / df['spot_T1'] - 1)
     df['gamma_pnl'] = 0.5 * df['gamma_T1'] * (df['spot_T2'] / df['spot_T1'] - 1)**2 * 100
     df['vega_pnl'] = df['vega_T1'] * (df['vol_T2'] - df['vol_T1']) * 100
