@@ -25,7 +25,7 @@ def pnl_greeks_attribution(df: DataFrame, trading_days: int = 365):
     df = calc_greeks_df(df, suffix='_day2')
 
     df['delta_pnl'] = df['delta_day1'] * (df['spot_day2'] / df['spot_day1'] - 1)
-    df['gamma_pnl'] = 0.5 * df['gamma_day1'] * (df['spot_day2'] / df['spot_day1'] - 1) ^ 2 * 100
+    df['gamma_pnl'] = 0.5 * df['gamma_day1'] * (df['spot_day2'] / df['spot_day1'] - 1)**2 * 100
     df['vega_pnl'] = df['vega_day1'] * (df['vol_day2'] - df['vol_day1']) * 100
     df['theta_pnl'] = df['theta_day1']
     return df
