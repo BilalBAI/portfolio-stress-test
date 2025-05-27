@@ -72,7 +72,7 @@ def bs_pricing(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_
                                                                                         (b - r)) * norm.cdf(-d1)
 
 
-def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default', normalized_greeks=False, trading_days=365):
+def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry_rate='default', normalized_greeks=False, trading_days=365, prefix='', suffix=''):
     """
     Generalized Black-Scholes-Merton Option Greeks Calculator
 
@@ -162,14 +162,14 @@ def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry
         theta = theta / trading_days  # Theta USD per day
 
     return {
-        'delta': delta,
-        'gamma': gamma,
-        'vega': vega,
-        'theta': theta
+        f'{prefix}delta{suffix}': delta,
+        f'{prefix}gamma{suffix}': gamma,
+        f'{prefix}vega{suffix}': vega,
+        f'{prefix}theta{suffix}': theta
     }
 
 
-def calc_greeks_df(df: pd.DataFrame) -> pd.DataFrame:
+def calc_greeks_df(df: pd.DataFrame, prefix: str = '', suffix: str = '') -> pd.DataFrame:
     """
     Adds option Greeks (delta, gamma, vega, theta) to a DataFrame with option parameters.
 
@@ -189,14 +189,16 @@ def calc_greeks_df(df: pd.DataFrame) -> pd.DataFrame:
     # Apply calc_greeks row-wise
     df_greeks = df.apply(lambda row: calc_greeks(
         strike=row['strike'],
-        time_to_expiry=row['time_to_expiry'],
-        spot=row['spot'],
+        time_to_expiry=row[f'{prefix}time_to_expiry{suffix}'],
+        spot=row[f'{prefix}spot{suffix}'],
         rate=row['rate'],
-        vol=row['vol'],
+        vol=row[f'{prefix}vol{suffix}'],
         put_call=row['put_call'],
         cost_of_carry_rate=row.get('cost_of_carry_rate', 'default'),
         normalized_greeks=row.get('normalized_greeks', False),
-        trading_days=row.get('trading_days', 365)
+        trading_days=row.get('trading_days', 365),
+        prefix=prefix,
+        suffix=suffix
     ), axis=1)
 
     # Expand dictionary into columns
