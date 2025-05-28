@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize, Bounds, NonlinearConstraint
 import plotly.graph_objects as go
 
-# === WingModel Class ===
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from scipy.optimize import minimize, Bounds, NonlinearConstraint
 
 
 class WingModel:
@@ -27,7 +32,7 @@ class WingModel:
     - F: Forward price (float64)
     """
 
-    def __init__(self, df: pd.DataFrame, min_fit: int = 5):
+    def __init__(self, df: pd.DataFrame, min_fit: int = 3):
         # Input validation
         assert isinstance(df, pd.DataFrame), "Input must be a pandas DataFrame"
         required_cols = ['IV', 'Strike', 'Date', 'Tau', 'F']
@@ -117,13 +122,14 @@ class WingModel:
         Can enforce no-arbitrage constraints.
         """
         self.param_dic = {}
-        initial_guess = [0.2, -0.1, 0, 0, 0.05, 0.03, 0.1]  # put_slope, call_slope unused
-        bounds = Bounds([0, -1, -1, -1, 0, 0, 0.01], [2, 1, 1, 1, 1, 1, 0.5])  # Wider atm_vol bound
+        bounds = Bounds([0, -1, -1, -1, 0, 0, 0.01], [2, 1, 1, 1, 1, 1, 0.5])
 
         for ti, t in enumerate(self.T):
             df = self.dfv_dic[t]
             xdata = df['LogM'].values
             ydata = df['TV'].values
+            # Dynamic initial guess based on data
+            initial_guess = [df['IV'].mean() / 100, -0.1, 0, 0, 0.05, 0.03, 0.1]
             constraints = []
 
             # No-negative-variance constraint
@@ -134,7 +140,7 @@ class WingModel:
                 )
             )
 
-            # Butterfly arbitrage constraint (convexity)
+            # Butterfly arbitrage constraint
             if no_butterfly:
                 constraints.append(
                     NonlinearConstraint(
@@ -166,9 +172,12 @@ class WingModel:
                 options={'maxiter': 1000}
             )
 
+            if not res.success:
+                print(f"Warning: Optimization failed for expiry {t}: {res.message}")
+                continue
+
             self.param_dic[t] = dict(zip(self.param_labels, res.x))
 
-            # Plot smile if requested
             if plots:
                 self.plot_smile(t)
 
@@ -209,8 +218,6 @@ class WingModel:
         else:
             plt.show()
 
-# === WingPlot Class ===
-
 
 class WingPlot:
     """
@@ -220,12 +227,14 @@ class WingPlot:
     def __init__(self):
         pass
 
-    def allsmiles(self, wm: WingModel):
+    def allsmiles(self, wm: WingModel, xnew_range: tuple = (-0.5, 0.5), points: int = 200):
         """
         Plot 3D implied volatility surface for all expiries.
 
         Args:
             wm (WingModel): Fitted WingModel instance.
+            xnew_range (tuple): Range for log-moneyness interpolation (min, max).
+            points (int): Number of interpolation points per curve.
 
         Returns:
             go.Figure: Plotly figure object.
@@ -239,27 +248,41 @@ class WingPlot:
         fig = go.Figure()
 
         for ti, t in enumerate(T):
-            df = dfv_dic[t]
+            df = dfv_dic.get(t)
+            if df is None or df.empty:
+                print(f"Warning: No data for expiry {t}")
+                continue
+
             x = df['LogM'].values
             z = df['IV'].values
             y = df['Date'].values
 
+            # Skip if insufficient data
+            if len(x) < 2:
+                print(f"Warning: Insufficient data points for expiry {t}, skipping")
+                continue
+
             # Generate new points for smooth curve
-            x0, x1 = x[0] * 1.1, x[-1] * 1.1
-            dx = (x1 - x0) / 200
-            xnew = np.arange(x0, x1, dx)
+            x0, x1 = xnew_range  # Use fixed range for consistency
+            dx = (x1 - x0) / (points - 1)
+            xnew = np.arange(x0, x1 + dx, dx)  # Ensure endpoint inclusion
             tau = df['Tau'].iloc[0]
 
             if tau <= 0:
                 print(f"Warning: Skipping expiry {t} due to non-positive Tau ({tau})")
                 continue
 
-            model_params = list(param_dic[t].values())
+            model_params = param_dic.get(t)
+            if model_params is None:
+                print(f"Warning: No fitted parameters for expiry {t}, skipping")
+                continue
+            model_params = list(model_params.values())
+
             total_var = wm.wing_vectorized(None, xnew, model_params)
 
             # Check for negative total variance
             if (total_var < 0).any():
-                print(f"Warning: Negative total variance for expiry {t}, skipping invalid points")
+                print(f"Warning: Negative total variance for expiry {t}, filtering invalid points")
                 valid_mask = total_var >= 0
                 xnew = xnew[valid_mask]
                 total_var = total_var[valid_mask]
@@ -267,20 +290,31 @@ class WingPlot:
                     print(f"Warning: No valid points for expiry {t}, skipping")
                     continue
 
-            znew = 100 * np.sqrt(total_var / tau)
+            try:
+                znew = 100 * np.sqrt(total_var / tau)
+            except (RuntimeWarning, ValueError) as e:
+                print(f"Warning: Failed to compute IV for expiry {t}: {e}")
+                continue
+
             ynew = np.array([t] * len(xnew))
 
             # Add market data points
             fig.add_trace(go.Scatter3d(
                 x=x, y=y, z=z, mode='markers', name=t.strftime("%Y-%m-%d"),
                 legendgroup=f"{str(ti)}", showlegend=False,
-                marker=dict(size=2, color='black')
+                marker=dict(size=2, color='black'),
+                visible=True
             ))
             # Add fitted smile curve
             fig.add_trace(go.Scatter3d(
                 x=xnew, y=ynew, z=znew, mode='lines', name=t.strftime("%Y-%m-%d"),
                 legendgroup=f"{str(ti)}", showlegend=True,
+                visible=True
             ))
+
+        if len(fig.data) == 0:
+            print("Warning: No valid curves to plot")
+            return fig
 
         fig = self._change_camera(fig)
         fig = self._add_onoff(fig)
@@ -331,11 +365,21 @@ class WingPlot:
         return fig
 
 
-# Sample Use
-'''
-wm = WingModel(df)
-wm.fit(no_butterfly=True, no_calendar=True, plots=True)
+# Example usage
+if __name__ == "__main__":
+    # Sample data
+    data = pd.DataFrame({
+        'IV': [20.0, 22.0, 25.0, 18.0, 21.0, 23.0],
+        'Strike': [100.0, 110.0, 120.0, 100.0, 110.0, 120.0],
+        'Date': [pd.Timestamp('2025-12-31')] * 3 + [pd.Timestamp('2026-03-31')] * 3,
+        'Tau': [0.5] * 3 + [0.75] * 3,
+        'F': [105.0] * 6
+    })
 
-wp = WingPlot()
-wp.allsmiles(wm)
-'''
+    # Initialize and fit model
+    wm = WingModel(data, min_fit=3)
+    wm.fit(no_butterfly=True, no_calendar=False)
+
+    # Plot volatility surface
+    wp = WingPlot()
+    wp.allsmiles(wm, xnew_range=(-0.5, 0.5), points=200)
