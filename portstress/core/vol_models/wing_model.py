@@ -55,7 +55,6 @@ def wing_vol_curve_with_smoothing(
         strikes (array): The original strike array.
         vols (array): Computed implied volatilities corresponding to the strikes.
     """
-
     # Convert SSR to a fractional weight (0 to 1)
     ssr_frac = SSR / 100.0
 
@@ -77,42 +76,53 @@ def wing_vol_curve_with_smoothing(
     x = np.log(strikes / F_eff)
     vols = np.zeros_like(x)
 
+    # Precompute Hermite endpoints
+    xL0, xL1 = dc - dsm, dc
+    yL0 = vc + sc * xL0 + pc * xL0 ** 2
+    yL1 = vc + sc * xL1 + pc * xL1 ** 2
+    dyL0 = sc + 2 * pc * xL0
+    dyL1 = sc + 2 * pc * xL1
+
+    xR0, xR1 = uc, uc + usm
+    yR0 = vc + sc * xR0 + cc * xR0 ** 2
+    yR1 = vc + sc * xR1 + cc * xR1 ** 2
+    dyR0 = sc + 2 * cc * xR0
+    dyR1 = sc + 2 * cc * xR1
+
     for i, xi in enumerate(x):
-        if xi < dc:
-            if xi >= dc - dsm:
-                # Down smoothing region [dc - dsm, dc]
-                # Smoothly interpolate from vol at (dc - dsm) to vol at dc using cubic blend
-                dx = xi - (dc - dsm)
-                A = vc + sc * (dc - dsm) + pc * (dc - dsm) ** 2
-                B = vc + sc * dc + pc * dc ** 2
-                t = dx / dsm  # Normalize to [0, 1]
-                w = 3 * t**2 - 2 * t**3  # Hermite blend
-                vols[i] = A + (B - A) * w
-            else:
-                # Flat extrapolation left of smoothing region
-                vols[i] = vc + sc * dc + pc * dc ** 2
+        if xi < xL0:
+            # Extrapolate left of smoothing using tangent at xL0
+            vols[i] = yL0 + dyL0 * (xi - xL0)
+
+        elif xL0 <= xi < xL1:
+            # Hermite interpolation in down smoothing zone
+            t = (xi - xL0) / (xL1 - xL0)
+            h00 = 2 * t**3 - 3 * t**2 + 1
+            h10 = t**3 - 2 * t**2 + t
+            h01 = -2 * t**3 + 3 * t**2
+            h11 = t**3 - t**2
+            vols[i] = h00 * yL0 + h10 * (xL1 - xL0) * dyL0 + h01 * yL1 + h11 * (xL1 - xL0) * dyL1
 
         elif dc <= xi < 0:
-            # Put wing: parabolic skew left of ATM
+            # Put wing
             vols[i] = vc + sc * xi + pc * xi ** 2
 
         elif 0 <= xi <= uc:
-            # Call wing: parabolic skew right of ATM
+            # Call wing
             vols[i] = vc + sc * xi + cc * xi ** 2
 
-        elif xi > uc:
-            if xi <= uc + usm:
-                # Up smoothing region [uc, uc + usm]
-                # Smoothly interpolate from vol at uc to vol at (uc + usm)
-                dx = xi - uc
-                A = vc + sc * uc + cc * uc ** 2
-                B = vc + sc * (uc + usm) + cc * (uc + usm) ** 2
-                t = dx / usm
-                w = 3 * t**2 - 2 * t**3  # Hermite blend
-                vols[i] = A + (B - A) * w
-            else:
-                # Flat extrapolation right of smoothing region
-                vols[i] = vc + sc * uc + cc * uc ** 2
+        elif xR0 < xi <= xR1:
+            # Hermite interpolation in up smoothing zone
+            t = (xi - xR0) / (xR1 - xR0)
+            h00 = 2 * t**3 - 3 * t**2 + 1
+            h10 = t**3 - 2 * t**2 + t
+            h01 = -2 * t**3 + 3 * t**2
+            h11 = t**3 - t**2
+            vols[i] = h00 * yR0 + h10 * (xR1 - xR0) * dyR0 + h01 * yR1 + h11 * (xR1 - xR0) * dyR1
+
+        elif xi > xR1:
+            # Extrapolate right of smoothing using tangent at xR1
+            vols[i] = yR1 + dyR1 * (xi - xR1)
 
     return strikes, vols
 
