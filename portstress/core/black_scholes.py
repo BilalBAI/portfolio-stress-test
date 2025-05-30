@@ -121,10 +121,24 @@ def calc_greeks(strike, time_to_expiry, spot, rate, vol, put_call, cost_of_carry
         b = cost_of_carry_rate
 
     if put_call not in ['put', 'call', 'p', 'c']:
-        return {'delta': 1, 'gamma': 0, 'vega': 0, 'theta': 0}
+        if normalized_greeks:
+            delta = spot
+        else:
+            delta = 1
+        return {
+            f'{prefix}delta{suffix}': delta,
+            f'{prefix}gamma{suffix}': 0,
+            f'{prefix}vega{suffix}': 0,
+            f'{prefix}theta{suffix}': 0
+        }
 
     if (time_to_expiry <= 0) or (vol == 0):
-        return {'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0}
+        return {
+            f'{prefix}delta{suffix}': 0,
+            f'{prefix}gamma{suffix}': 0,
+            f'{prefix}vega{suffix}': 0,
+            f'{prefix}theta{suffix}': 0
+        }
 
     sqrt_T = time_to_expiry ** 0.5
     d1 = (math.log(spot / strike) + (b + vol**2 / 2) * time_to_expiry) / (vol * sqrt_T)
