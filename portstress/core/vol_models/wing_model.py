@@ -127,6 +127,61 @@ def wing_vol_curve_with_smoothing(
     return strikes, vols
 
 
+def fit_wing_model_to_data(strikes, market_vols, F, Ref=None, ATM=None):
+    initial_params = {
+        "vr": 0.2,
+        "sr": 0.0,
+        "pc": 1.0,
+        "cc": 1.0,
+        "dc": -0.2,
+        "uc": 0.2,
+        "dsm": 0.3,
+        "usm": 0.3,
+    }
+
+    bounds = [
+        (0.05, 1.0),   # vr
+        (-5.0, 5.0),   # sr
+        (0.0, 10.0),   # pc
+        (0.0, 10.0),   # cc
+        (-1.0, -0.01),  # dc
+        (0.01, 1.0),   # uc
+        (0.01, 1.0),   # dsm
+        (0.01, 1.0),   # usm
+    ]
+
+    def objective(p):
+        vr, sr, pc, cc, dc, uc, dsm, usm = p
+        _, model_vols = wing_vol_curve_with_smoothing(
+            strikes=strikes,
+            F=F,
+            vr=vr,
+            sr=sr,
+            pc=pc,
+            cc=cc,
+            dc=dc,
+            uc=uc,
+            dsm=dsm,
+            usm=usm,
+            VCR=0.0,
+            SCR=0.0,
+            SSR=100,
+            Ref=Ref if Ref else F,
+            ATM=ATM if ATM else F,
+        )
+        return np.mean((model_vols - market_vols) ** 2)
+
+    result = minimize(
+        objective,
+        list(initial_params.values()),
+        bounds=bounds,
+        method="L-BFGS-B"
+    )
+
+    fitted = dict(zip(initial_params.keys(), result.x))
+    return fitted
+
+
 class WingModel:
     """
     WingModel fits a parametric implied volatility smile model (Wing Model) to option market data
