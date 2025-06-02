@@ -110,7 +110,8 @@ class WingModel:
         return strikes, vols
 
     # --- Fit function ---
-    def fit_wing_model_to_data(self, strikes, market_vols, F_init, Ref_init=None, ATM_init=None, fit_vcr_scr_ssr=True, fit_f_ref_atm=False):
+    @staticmethod
+    def fit_wing_model_to_data(strikes, market_vols, F_init, Ref_init=None, ATM_init=None, fit_vcr_scr_ssr=True, fit_f_ref_atm=False):
         Ref_init = Ref_init or F_init
         ATM_init = ATM_init or F_init
 
@@ -135,7 +136,7 @@ class WingModel:
 
         def objective(p):
             params = unpack_params(p)
-            _, vols = self.wing_vol_curve_with_smoothing(strikes=strikes, **params)
+            _, vols = WingModel.wing_vol_curve_with_smoothing(strikes=strikes, **params)
             return np.mean(weights * (vols - market_vols) ** 2)
 
         p0 = [0.2, -0.1, 1.5, 1.0, -0.3, 0.3, 0.4, 0.4]
