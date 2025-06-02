@@ -90,22 +90,28 @@ class WingModel:
 
         for i, xi in enumerate(x):
             if xi < xL0:
+                # Far left (x < dc - dsm): Flat extrapolation using the volatility and slope at the down cutoff.
                 vols[i] = yL0 + dyL0 * (xi - xL0)
             elif xL0 <= xi < xL1:
+                # Left smoothing zone (dc - dsm ≤ x < dc): Cubic Hermite interpolation for smooth transition.
                 t = (xi - xL0) / (xL1 - xL0)
                 h00, h10 = 2 * t**3 - 3 * t**2 + 1, t**3 - 2 * t**2 + t
                 h01, h11 = -2 * t**3 + 3 * t**2, t**3 - t**2
                 vols[i] = h00 * yL0 + h10 * (xL1 - xL0) * dyL0 + h01 * yL1 + h11 * (xL1 - xL0) * dyL1
             elif dc <= xi < 0:
+                # Put wing (dc ≤ x < 0): Parabolic skew
                 vols[i] = vc + sc * xi + pc * xi ** 2
             elif 0 <= xi <= uc:
+                # Call wing (0 ≤ x ≤ uc): Parabolic skew
                 vols[i] = vc + sc * xi + cc * xi ** 2
             elif xR0 < xi <= xR1:
+                # Right smoothing zone (uc < x ≤ uc + usm): Cubic Hermite interpolation.
                 t = (xi - xR0) / (xR1 - xR0)
                 h00, h10 = 2 * t**3 - 3 * t**2 + 1, t**3 - 2 * t**2 + t
                 h01, h11 = -2 * t**3 + 3 * t**2, t**3 - t**2
                 vols[i] = h00 * yR0 + h10 * (xR1 - xR0) * dyR0 + h01 * yR1 + h11 * (xR1 - xR0) * dyR1
             else:
+                # Far right (x > uc + usm): Flat extrapolation.
                 vols[i] = yR1 + dyR1 * (xi - xR1)
 
         return strikes, vols
