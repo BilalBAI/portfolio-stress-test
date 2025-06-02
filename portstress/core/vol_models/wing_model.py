@@ -127,59 +127,72 @@ def wing_vol_curve_with_smoothing(
     return strikes, vols
 
 
-def fit_wing_model_to_data(strikes, market_vols, F, Ref=None, ATM=None):
-    initial_params = {
-        "vr": 0.2,
-        "sr": 0.0,
-        "pc": 1.0,
-        "cc": 1.0,
-        "dc": -0.2,
-        "uc": 0.2,
-        "dsm": 0.3,
-        "usm": 0.3,
-    }
+def fit_wing_model_to_data(
+    strikes, market_vols, F_init, Ref_init=None, ATM_init=None,
+    fit_vcr_scr_ssr=True, fit_f_ref_atm=False
+):
+    Ref_init = Ref_init or F_init
+    ATM_init = ATM_init or F_init
 
-    bounds = [
-        (0.05, 1.0),   # vr
-        (-5.0, 5.0),   # sr
-        (0.0, 10.0),   # pc
-        (0.0, 10.0),   # cc
-        (-1.0, -0.01),  # dc
-        (0.01, 1.0),   # uc
-        (0.01, 1.0),   # dsm
-        (0.01, 1.0),   # usm
-    ]
+    x_moneyness = np.log(strikes / F_init)
+    weights = 1 / (np.abs(x_moneyness) + 0.05)
+
+    def unpack_params(p):
+        idx = 0
+        keys = ["vr", "sr", "pc", "cc", "dc", "uc", "dsm", "usm"]
+        vals = dict(zip(keys, p[idx:idx + 8]))
+        idx += 8
+        if fit_vcr_scr_ssr:
+            vals.update(dict(VCR=p[idx], SCR=p[idx + 1], SSR=p[idx + 2]))
+            idx += 3
+        else:
+            vals.update(dict(VCR=0.0, SCR=0.0, SSR=100.0))
+        if fit_f_ref_atm:
+            vals.update(dict(F=p[idx], Ref=p[idx + 1], ATM=p[idx + 2]))
+        else:
+            vals.update(dict(F=F_init, Ref=Ref_init, ATM=ATM_init))
+        return vals
 
     def objective(p):
-        vr, sr, pc, cc, dc, uc, dsm, usm = p
-        _, model_vols = wing_vol_curve_with_smoothing(
+        params = unpack_params(p)
+        _, vols = wing_vol_curve_with_smoothing(
             strikes=strikes,
-            F=F,
-            vr=vr,
-            sr=sr,
-            pc=pc,
-            cc=cc,
-            dc=dc,
-            uc=uc,
-            dsm=dsm,
-            usm=usm,
-            VCR=0.0,
-            SCR=0.0,
-            SSR=100,
-            Ref=Ref if Ref else F,
-            ATM=ATM if ATM else F,
+            **params
         )
-        return np.mean((model_vols - market_vols) ** 2)
+        return np.mean(weights * (vols - market_vols) ** 2)
 
-    result = minimize(
-        objective,
-        list(initial_params.values()),
-        bounds=bounds,
-        method="L-BFGS-B"
-    )
+    # Initial guess
+    p0 = [
+        0.2,   # vr
+        -0.1,  # sr
+        1.5,   # pc
+        1.0,   # cc
+        -0.3,  # dc
+        0.3,   # uc
+        0.4,   # dsm
+        0.4,   # usm
+    ]
+    bounds = [
+        (0.05, 1.0),   # vr
+        (-2.0, 2.0),   # sr
+        (0.01, 5.0),   # pc
+        (0.01, 5.0),   # cc
+        (-1.5, -0.01),  # dc
+        (0.01, 1.5),   # uc
+        (0.01, 2.0),   # dsm
+        (0.01, 2.0),   # usm
+    ]
 
-    fitted = dict(zip(initial_params.keys(), result.x))
-    return fitted
+    if fit_vcr_scr_ssr:
+        p0 += [0.0, 0.0, 100.0]
+        bounds += [(-2.0, 2.0), (-2.0, 2.0), (0, 100)]
+
+    if fit_f_ref_atm:
+        p0 += [F_init, Ref_init, ATM_init]
+        bounds += [(F_init * 0.9, F_init * 1.1)] * 3
+
+    result = minimize(objective, p0, bounds=bounds, method='L-BFGS-B')
+    return unpack_params(result.x)
 
 
 class WingModel:
