@@ -19,6 +19,7 @@ class WingModel:
     def __init__(self):
         self.param_widgets = {}
         self.market_data = None
+        self.forward = None
 
     # --- Wing vol curve model ---
     @staticmethod
@@ -172,6 +173,9 @@ class WingModel:
     def set_market_data(self, strikes, vols):
         self.market_data = (strikes, vols)
 
+    def set_forward(self, set_forward):
+        self.forward = set_forward
+
     # --- Plot ---
     def interactive_wing_plot_with_data(self, vr, sr, pc, cc, dc, uc, dsm, usm, VCR, SCR, SSR, F, Ref, ATM):
         if self.market_data is not None:
@@ -222,9 +226,11 @@ class WingModel:
         if self.market_data is not None:
             mk_strikes, _ = self.market_data
             s_min, s_max = np.min(mk_strikes), np.max(mk_strikes)
-            defs['F'] = ("Forward", s_min, s_max, 1, (s_min + s_max) / 2)
-            defs['Ref'] = ("Ref", s_min, s_max, 1, (s_min + s_max) / 2)
-            defs['ATM'] = ("ATM", s_min, s_max, 1, (s_min + s_max) / 2)
+            if self.forward is None:
+                self.forward = (s_min + s_max) / 2
+            defs['F'] = ("Forward", s_min, s_max, 1, self.forward)
+            defs['Ref'] = ("Ref", s_min, s_max, 1, self.forward)
+            defs['ATM'] = ("ATM", s_min, s_max, 1, self.forward)
 
         widget_boxes = []
         for k, v in defs.items():
