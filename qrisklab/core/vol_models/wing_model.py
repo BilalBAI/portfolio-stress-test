@@ -64,6 +64,19 @@ class WingModel:
             Ref (float): Reference forward price.
             ATM (float): ATM forward used in floating skew calculation.
 
+
+        Notes on Skew Swimmingness Rate (SSR):
+            Definition: SSR (ranging from 0 to 100) controls the degree to which the volatility curve’s ATM point is anchored to the forward price (F) versus the reference price (Ref). It is expressed as a percentage, where:
+            SSR = 0: The curve is fully fixed to Ref (fixed skew).
+            SSR = 100: The curve is fully anchored to F via ATM (floating skew).
+            0 < SSR < 100: The curve interpolates between Ref and ATM.
+
+            Fixed Skew (SSR = 0) ≈ Sticky Strike: The volatility curve is anchored to Ref, keeping volatilities constant per strike (with VCR/SCR adjustments), suitable for stable markets or long-term options.
+            Floating Skew (SSR = 100) = Sticky Delta: The curve shifts with F, keeping volatilities constant for fixed log-moneyness or delta, ideal for dynamic markets like cryptocurrencies.
+            Hybrid SSR: Offers a unique blend, not directly equivalent to sticky delta or sticky strike, allowing partial curve shifts for flexible modeling.
+            Choosing the Model: Use sticky delta/floating skew for short-term, volatile markets (e.g., BTC options on Deribit). Use sticky strike/fixed skew for stable markets or when modeling fixed volatility structures. Test hybrid SSR for intermediate cases.
+
+
         Returns:
             strikes (array): The original strike array.
             vols (array): Computed implied volatilities corresponding to the strikes.
