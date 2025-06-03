@@ -46,7 +46,14 @@ pip install git+https://github.com/BilalBAI/qrisklab.git
 deactivate
 ```
 
-### `.env`
+### Bloomberg (BBG Terminal should be logged in and API enabled)
+```ini
+python -m pip install --index-url=https://blpapi.bloomberg.com/repository/releases/python/simple/ blpapi
+
+pip install blp
+
+pip install sqlalchemy
+```
 
 In the `.env` you need the following keys:
 
@@ -56,5 +63,3 @@ In the `.env` you need the following keys:
 # Auto create new db if db doesn't exist
 BBG_CACHE_DB_DIR=<DIR>
 ```
-
-Bloomberg API access is required for equity stress test.

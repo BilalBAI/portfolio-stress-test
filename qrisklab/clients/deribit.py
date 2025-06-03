@@ -179,3 +179,41 @@ class DeribitClient:
         df_atm['timestamp_atm_ivol'] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
 
         return df_atm[['underlying-expiry', 'atm_strike', 'atm_ivol', 'timestamp_atm_ivol']]
+
+
+def fetch_market_data(df_positions: pd.DataFrame, valuation_day: str):
+    """
+        df_positions[['instrument','quantity']]
+    """
+    df = df_positions.copy()
+    # Splitting the 'instrument' column by "-"
+    df[['underlying', 'expiry', 'strike', 'put_call']] = df['instrument'].str.split('-', expand=True)
+    df['strike'] = df['strike'].astype(float)
+    df['put_call'] = df['put_call'].map({'P': 'put', 'C': 'call'})
+    df['underlying-expiry'] = df['underlying'] + "-" + df['expiry']
+    df['expiry'] = df['expiry'].replace('PERPETUAL', None)  # e.g. BTC-PERPETUAL
+    df['expiry'] = pd.to_datetime(df['expiry'], format='%d%b%y')
+    # Calculate time to expiry
+    valuation_day = pd.to_datetime(valuation_day)
+    df['time_to_expiry'] = (df['expiry'] - valuation_day).dt.days / 365
+    # convert expiry to a string
+    df['expiry'] = df['expiry'].dt.strftime('%Y-%m-%d')
+
+    # get market data from deribit
+    db_client = DeribitClient()
+    deribit_res = db_client.get_order_book(instruments=df['instrument'].to_list())
+    df = pd.merge(df, deribit_res, how='left', left_on='instrument', right_on='instrument_name')
+
+    # calculate input for BSM
+    df['cost_of_carry_rate'] = 'default'
+    df['multiplier'] = 1
+    df['rate'] = 0.03
+    df['vol'] = df['mark_iv'] / 100
+    df['spot'] = df['underlying_price']
+    df['spot'] = df['spot'].fillna(df['index_price'])
+    # df['position_vega'] = df['vega'] * df['quantity']
+
+    # calculate atm_ivol
+    df_atm = db_client.get_atm_ivol()
+    df = pd.merge(df, df_atm, on='underlying-expiry', how='left')
+    return df
