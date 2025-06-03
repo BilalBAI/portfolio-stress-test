@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import datetime
+import time
 
 # Get list of instrument from deribit
 ATTRIBUTES = ['underlying_price', 'timestamp', 'mark_iv', 'instrument_name',
@@ -13,6 +14,62 @@ class DeribitClient:
         base_url='https://deribit.com/api/v2/public'
     ):
         self.base_url = base_url
+
+    def fetch_deribit_option_data(self, currency="BTC", kind="option"):
+        """
+        Fetch real-time option chain data from Deribit for a given currency.
+
+        Parameters:
+            currency (str): Base currency (e.g., 'BTC', 'ETH').
+            kind (str): Instrument kind ('option' or 'future').
+
+        Returns:
+            pd.DataFrame: DataFrame with option data.
+        """
+        url = "https://www.deribit.com/api/v2/public/get_book_summary_by_currency"
+        params = {
+            "currency": currency,
+            "kind": kind
+        }
+
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if "result" not in data:
+                print("Error: No result in response")
+                return pd.DataFrame()
+
+            # Extract relevant fields
+            options_data = []
+            current_timestamp = int(time.time() * 1000)  # Current timestamp in ms
+            for item in data["result"]:
+                options_data.append({
+                    "timestamp": current_timestamp,
+                    "datetime": datetime.datetime.fromtimestamp(current_timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S'),
+                    "instrument_name": item.get("instrument_name"),
+                    "underlying_price": item.get("underlying_price"),
+                    "forward_price": item.get("estimated_delivery_price"),
+                    "mark_iv": item.get("mark_iv"),
+                    "bid_iv": item.get("bid_iv"),
+                    "ask_iv": item.get("ask_iv"),
+                    "bid_price": item.get("bid_price"),
+                    "ask_price": item.get("ask_price"),
+                    "mid_price": item.get("mid_price"),
+                    "mark_price": item.get("mark_price"),
+                    "last_price": item.get("last"),
+                    "open_interest": item.get("open_interest"),
+                    "volume": item.get("volume"),
+                    "creation_timestamp": item.get("creation_timestamp")
+                })
+
+            df = pd.DataFrame(options_data)
+            return df
+
+        except requests.RequestException as e:
+            print(f"Error fetching data: {e}")
+            return pd.DataFrame()
 
     def get_instruments(self, coins: list = ['BTC', 'ETH']):
         url = f'{self.base_url}/get_instruments'
