@@ -1,8 +1,8 @@
 import json
 from pandas import DataFrame
-from portstress.core.utils import EquityParameters
-from portstress.clients.clients import PortStressClient
-from portstress.equity import EquityRisk
+from qrisklab.core.utils import EquityParameters
+from qrisklab.clients.clients import PortStressClient
+from qrisklab.equity import EquityRisk
 
 PARAMS_SUB_DIR = 'data/parameters/'
 POS_DIR = 'data/positions.json'
