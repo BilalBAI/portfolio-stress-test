@@ -8,7 +8,7 @@ import numpy as np
 
 from .core.utils import CryptoParameters, VolSurfaceParameters
 from .core.black_scholes import calc_delta, calc_vega, BS_PARAMETERS
-from .core.spot_vol_stress import StressTest
+from .core.stress_tests import StressTest
 from .core.vol_surface_stress import Parallel, TermStructure, Skew, BidAsk
 from .clients.deribit import DeribitClient
 
@@ -115,80 +115,6 @@ class CryptoSpotVolShocks:
             data = st.shock_df(data, f"{k}")
             st_columns.append(f"{k}")
         return data, st_columns
-
-    # def rv_risk(self, df_input='default'):
-    #     """
-    #     Return: RV details: DataFrame (sum up 'Spot RV' column to get the final number)
-    #     """
-    #     if df_input == 'default':
-    #         df = self.data.copy()
-    #     else:
-    #         df = df_input.copy()
-    #     for i in self.parameters.rv_scenarios.keys():
-    #         df[i] = df[f"spot {self.parameters.rv_scenarios[i]} vol 0"]
-    #     df['Spot RV'] = df[list(self.parameters.rv_scenarios.keys())].min(axis=1, numeric_only=True)
-    #     return df
-
-    # @staticmethod
-    # def calc_delta_liq(row):
-    #     days_to_liq = row['days_to_liq']
-    #     delta = row['delta']
-    #     if days_to_liq > 1:
-    #         if delta > 0:
-    #             return -min(1, 0.05 * (days_to_liq - 1)) * abs(delta)
-    #         else:
-    #             return -min(3, 0.05 * (days_to_liq - 1)) * abs(delta)
-    #     else:
-    #         return 0
-
-    # def delta_liquidation(self, df_input='default'):
-    #     """
-    #     Required fields: ['quantity', 'instrumentType', 'SECURITY_TYP2', 'VOLUME_AVG_20D', 'Market Value'],
-    #     Return: Liq_charge: DataFrame
-    #     df = df[(df['instrumentType'] == 'EquitySecurity') & (df['SECURITY_TYP2'] != 'Mutual Fund') &
-    #     (df['VOLUME_AVG_20D'] != 0)]
-    #     """
-    #     if df_input == 'default':
-    #         df = self.symbol_level_data_ungrouped.copy()
-    #     else:
-    #         df = df_input.copy()
-    #     df = df[df['VOLUME_AVG_20D'] != 0]
-    #     df['days_to_liq'] = df['delta'].abs() / (df['VOLUME_AVG_20D'] * df['price'])
-    #     df['Liq Charge'] = df[['days_to_liq', 'delta']].apply(EquityRisk.calc_delta_liq, axis=1)
-    #     return df.sort_values(by='Liq Charge', ascending=False)
-
-    # def run(self):
-    #     """
-    #     Attributes Created: rv_summary, .macro_summary, .sector_summary, .parallel_summary, .equity_liq_summary,
-    #                         .equity_risk_summary
-    #     """
-    #     if self.data.empty or self.symbol_level_data.empty:
-    #         self.total_loss = 0
-    #         return 'Warning: Empty DataFrame input'
-    #     df_rv = self.rv_risk()
-    #     self.rv_loss = df_rv['Spot RV'].sum()
-
-    #     df_liq = self.delta_liquidation()
-    #     self.delta_liq_loss = df_liq['Liq Charge'].sum()
-
-    #     self.total_loss = min(
-    #         self.rv_loss, self.macro_loss, self.sector_loss, self.parallel_loss
-    #     ) + self.delta_liq_loss
-    #     self.summary_info()
-    #     return 'Success'
-
-    # def summary_info(self):
-    #     print('\n---------------------------------')
-    #     print(f"GMV: {self.gmv:,.0f}")
-    #     print(f'Equity Risk Summary: {self.total_loss:,.0f}\n')
-    #     print('Equity Stress Tests:')
-    #     print(f'RV Summary: {self.rv_loss:,.0f}')
-    #     print(f'Macro Summary: {self.macro_loss:,.0f}')
-    #     print(f'Sector Summary: {self.sector_loss:,.0f}')
-    #     print(f'Parallel Summary: {self.parallel_loss:,.0f}\n')
-    #     print('Liquidity Summary:')
-    #     print(f'Delta Liq Summary: {self.delta_liq_loss:,.0f}')
-    #     print('---------------------------------\n')
 
 
 class CryptoVolSurfaceShocks:
